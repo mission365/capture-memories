@@ -1976,7 +1976,7 @@ function PackageInfoCard({ item, onOpenDetails }) {
         <button
           type="button"
           onClick={() => onOpenDetails(item)}
-          className="w-full max-w-[300px] border border-stone-900 px-6 py-3 text-xl text-stone-950 transition hover:bg-stone-900 hover:text-white"
+          className="details-glow-button w-full max-w-[300px] rounded-full border border-stone-900 bg-white px-6 py-3 text-xl text-stone-950 transition hover:bg-stone-900 hover:text-white"
         >
           Details
         </button>
@@ -2653,6 +2653,7 @@ export default function ChitrogolpoInspiredFullSite() {
   const { pathname, navigate } = usePathname();
   const [siteContent, setSiteContent] = useState(defaultSiteContent);
   const [siteContentReady, setSiteContentReady] = useState(!isSupabaseConfigured());
+  const isAdminRoute = pathname === '/admin';
 
   useEffect(() => {
     let ignore = false;
@@ -2747,7 +2748,7 @@ export default function ChitrogolpoInspiredFullSite() {
   return (
     <SiteContentReadyContext.Provider value={siteContentReady}>
       <SiteContentContext.Provider value={siteContent}>
-        <div className="min-h-screen bg-white text-gray-900">
+        <div className={`${isAdminRoute ? '' : 'chitro-site '}min-h-screen bg-white text-gray-900`}>
           <Header pathname={pathname} navigate={navigate} />
           <main>{page}</main>
           <Footer navigate={navigate} />
@@ -2756,4 +2757,3 @@ export default function ChitrogolpoInspiredFullSite() {
     </SiteContentReadyContext.Provider>
   );
 }
-

@@ -123,3 +123,60 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  .chitro-site :is(button, [data-slot='button']) {
+    position: relative;
+    transition:
+      transform 220ms ease,
+      box-shadow 220ms ease,
+      filter 220ms ease,
+      background-color 220ms ease,
+      color 220ms ease,
+      border-color 220ms ease;
+    will-change: transform, box-shadow, filter;
+  }
+
+  .chitro-site :is(button, [data-slot='button'])[class*='bg-'] {
+    box-shadow:
+      0 10px 24px rgba(17, 24, 39, 0.12),
+      0 0 0 1px rgba(17, 24, 39, 0.04);
+  }
+
+  .chitro-site :is(button, [data-slot='button']):not(:disabled):not([aria-disabled='true']):hover,
+  .chitro-site :is(button, [data-slot='button']):not(:disabled):not([aria-disabled='true']):focus-visible {
+    transform: translateY(-1px);
+    filter:
+      drop-shadow(0 0 12px rgba(245, 158, 11, 0.24))
+      drop-shadow(0 14px 24px rgba(17, 24, 39, 0.16));
+  }
+
+  .chitro-site :is(button, [data-slot='button'])[class*='bg-']:not(:disabled):not([aria-disabled='true']):hover,
+  .chitro-site :is(button, [data-slot='button'])[class*='bg-']:not(:disabled):not([aria-disabled='true']):focus-visible {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.24),
+      0 0 0 7px rgba(255, 248, 235, 0.82),
+      0 18px 34px rgba(17, 24, 39, 0.18),
+      0 0 28px rgba(245, 158, 11, 0.2);
+  }
+
+  .chitro-site :is(button, [data-slot='button']):disabled,
+  .chitro-site :is(button, [data-slot='button'])[aria-disabled='true'] {
+    filter: none;
+  }
+
+  .chitro-site .details-glow-button {
+    box-shadow:
+      0 12px 24px rgba(15, 23, 42, 0.12),
+      0 0 0 1px rgba(15, 23, 42, 0.06);
+  }
+
+  .chitro-site .details-glow-button:not(:disabled):not([aria-disabled='true']):hover,
+  .chitro-site .details-glow-button:not(:disabled):not([aria-disabled='true']):focus-visible {
+    box-shadow:
+      0 0 0 1px rgba(24, 24, 27, 0.14),
+      0 0 0 8px rgba(255, 243, 214, 0.92),
+      0 0 36px rgba(251, 191, 36, 0.34),
+      0 18px 34px rgba(15, 23, 42, 0.2);
+  }
+}

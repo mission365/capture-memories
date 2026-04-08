@@ -6,6 +6,7 @@ import BookUsAdminPanel from '@/components/book-us-admin-panel';
 import PackagesAdminPanel from '@/components/packages-admin-panel';
 import SampleWorksAdminPanel from '@/components/sample-works-admin-panel';
 import SiteIdentityAdminPanel from '@/components/site-identity-admin-panel';
+import { Spinner } from '@/components/ui/spinner';
 import { createWhatsAppLink, normalizeBookUsContent } from '@/lib/book-us-content';
 import {
   normalizeAlbumStoryGalleryItems,
@@ -317,6 +318,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
   const [siteIdentityLogoPreviewUrl, setSiteIdentityLogoPreviewUrl] = useState('');
   const [bookUsForm, setBookUsForm] = useState(() => createBookUsForm(initialBookUsContent));
   const [activeAdminSection, setActiveAdminSection] = useState('slider');
+  const [loggingOut, setLoggingOut] = useState(false);
   const [selectedSectionKey, setSelectedSectionKey] = useState(contentSections[0]?.key || '');
   const [sectionEditor, setSectionEditor] = useState('');
   const [message, setMessage] = useState('');
@@ -630,6 +632,11 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
   }
 
   async function handleLogout() {
+    if (loggingOut) {
+      return;
+    }
+
+    setLoggingOut(true);
     setMessage('');
     setError('');
 
@@ -659,6 +666,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
       setActiveAdminSection('slider');
       setSelectedSectionKey(contentSections[0]?.key || '');
       setSectionEditor('');
+      setLoggingOut(false);
     }
   }
 
@@ -1628,9 +1636,11 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
               <button
                 type="button"
                 onClick={handleLogout}
-                className="rounded-full bg-stone-900 px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+                disabled={loggingOut}
+                className="inline-flex items-center gap-2 rounded-full bg-stone-900 px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Logout
+                {loggingOut && <Spinner className="size-4 text-white" />}
+                {loggingOut ? 'Logging out...' : 'Logout'}
               </button>
             </div>
           </div>
@@ -1683,8 +1693,9 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
               <button
                 type="submit"
                 disabled={saving}
-                className="mt-8 rounded-full bg-stone-900 px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-8 inline-flex items-center gap-2 rounded-full bg-stone-900 px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
               >
+                {saving && <Spinner className="size-4 text-white" />}
                 {saving ? 'Signing in...' : 'Login to Admin'}
               </button>
             </form>

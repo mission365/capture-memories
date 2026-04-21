@@ -5,13 +5,31 @@ import { defaultHeroSlides, normalizeHeroSlides } from '@/lib/hero-slides';
 import { normalizePackageCards, normalizePackageDetailSections, normalizePackageShowcase } from '@/lib/package-content';
 import { normalizeSampleWorks, SAMPLE_WORK_FILTERS } from '@/lib/sample-works-content';
 import { isSupabaseConfigured, listHeroSlides, listSiteSections } from '@/lib/supabase-browser';
-import { ChevronLeft, ChevronRight, Facebook, Instagram, Mail, MapPin, Menu, MessageSquare, Phone, Youtube } from 'lucide-react';
+import {
+  Camera,
+  ChevronLeft,
+  ChevronRight,
+  Facebook,
+  Gift,
+  Instagram,
+  Mail,
+  MapPin,
+  Menu,
+  MessageCircle,
+  MessageSquare,
+  Phone,
+  Sparkles,
+  Video,
+  Youtube,
+} from 'lucide-react';
 import { createContext, useContext, useEffect, useState } from 'react';
+
+const PACKAGE_FALLBACK_ICONS = [Camera, Video, Gift, Sparkles, MessageSquare];
 
 const site = {
   brand: 'ChitroStyle',
   tagline: 'Wedding Photography Studio',
-  logoUrl: '/icon.svg',
+  logoUrl: '',
   email: 'hello@chitrostyle.com',
   phone: '+880 1XXX-XXXXXX',
   location: 'Dhaka, Bangladesh',
@@ -110,329 +128,29 @@ const jobs = [
   },
 ];
 
-const featuredAlbums = [
-  {
-    title: 'Urban Exhibition Chitro',
-    slug: 'urban-exhibition-chitro',
-    heroTitle: 'Urban Exhibition Chitro',
-    heroSubtitle: 'CHITROGOLPO OF THE CITY',
-    story:
-      'This album follows a wedding story shaped by public spaces, textured architecture, and quiet moments inside a busy city. We wanted every frame to feel grounded, intimate, and alive with the rhythm of the place around the couple.',
-    credit: '© ChitroStyle Album / 2026',
-    image:
-      'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=1200&q=80',
-  },
-  {
-    title: 'Sonali Unlimited Utshob',
-    slug: 'sonali-unlimited-utshob',
-    heroTitle: 'Sonali Unlimited Utshob',
-    heroSubtitle: 'A GOLDEN CELEBRATION STORY',
-    story:
-      'Warm light, flowing fabric, and joyful movement define this gallery. We documented the celebration with a soft golden palette so the album feels festive, emotional, and rich with the atmosphere of the day.',
-    credit: '© ChitroStyle Celebration Story / 2026',
-    image:
-      'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=1200&q=80',
-  },
-  {
-    title: 'Dipshikhar Aayojon',
-    slug: 'dipshikhar-aayojon',
-    heroTitle: 'Dipshikhar Aayojon',
-    heroSubtitle: 'AN INTIMATE WEDDING MEMORY',
-    story:
-      'This series is built around mood, ritual, and expressive portraiture. We focused on contrast, shadow, and ceremonial detail to preserve the elegance of the moment without losing its personal warmth.',
-    credit: '© ChitroStyle Ritual Story / 2026',
-    image:
-      'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=1200&q=80',
-  },
-  {
-    title: 'Gaye Holud',
-    slug: 'gaye-holud',
-    heroTitle: 'Gaye Holud',
-    heroSubtitle: 'A HALDI DAY CHITROGOLPO',
-    story:
-      'Joy, color, and family energy shaped this album from beginning to end. Our approach was to keep the images playful and sunlit while holding on to the closeness and tradition that make a holud unforgettable.',
-    credit: '© ChitroStyle Holud Story / 2026',
-    image:
-      'https://images.unsplash.com/photo-1529636798458-92182e662485?auto=format&fit=crop&w=1200&q=80',
-  },
-  {
-    title: 'Shonar Shondha',
-    slug: 'shonar-shondha',
-    heroTitle: 'Shonar Shondha',
-    heroSubtitle: 'AN EVENING OF GOLDEN LIGHT',
-    story:
-      'Shonar Shondha is about glow, softness, and the tenderness that appears just before evening fades. We photographed this story with an emphasis on natural color, romantic spacing, and graceful movement.',
-    credit: '© ChitroStyle Evening Story / 2026',
-    image:
-      'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1200&q=80',
-  },
-  {
-    title: 'Bridal Portrait',
-    slug: 'bridal-portrait',
-    heroTitle: 'Bridal Portrait',
-    heroSubtitle: 'A PORTRAIT-LED PHOTO STORY',
-    story:
-      'This album celebrates styling, confidence, and stillness. Every portrait was built to highlight expression, dress detail, and the quiet power of a bride fully present in her own story.',
-    credit: '© ChitroStyle Portrait Story / 2026',
-    image:
-      'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1200&q=80',
-  },
-  {
-    title: 'Reception Glow',
-    slug: 'reception-glow',
-    heroTitle: 'Reception Glow',
-    heroSubtitle: 'A NIGHT OF LIGHT AND JOY',
-    story:
-      'Reception Glow gathers the brightness of decor, stage moments, and shared celebration into one polished visual story. We treated the evening like a cinematic sequence with elegance and warmth in every frame.',
-    credit: '© ChitroStyle Reception Story / 2026',
-    image:
-      'https://images.unsplash.com/photo-1469371670807-013ccf25f16a?auto=format&fit=crop&w=1200&q=80',
-  },
-  {
-    title: 'Outdoor Love Story',
-    slug: 'outdoor-love-story',
-    heroTitle: 'Outdoor Love Story',
-    heroSubtitle: 'A NATURAL LIGHT CHITROGOLPO',
-    story:
-      'Set against open air and soft landscapes, this gallery leans into the feeling of freedom and connection. We photographed the couple with distance, breathing space, and natural light to let the story unfold gently.',
-    credit: '© ChitroStyle Outdoor Story / 2026',
-    image:
-      'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80',
-  },
-];
+const featuredAlbums = [];
 
-const albumStoryGalleries = {
-  'urban-exhibition-chitro': [
-    {
-      image:
-        'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=1600&q=80',
-      caption:
-        'A city-side frame where architecture, texture, and human scale come together to give the couple a cinematic sense of place.',
-    },
-    {
-      image:
-        'https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=1600&q=80',
-      caption:
-        'We kept the composition open and breathable so the environment feels like part of the story, not just a backdrop.',
-    },
-    {
-      image:
-        'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1600&q=80',
-      caption:
-        'Portrait moments were shaped with clean geometry and soft contrast to preserve an elegant editorial mood.',
-    },
-  ],
-  'sonali-unlimited-utshob': [
-    {
-      image:
-        'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=1600&q=80',
-      caption:
-        'Golden light and flowing fabric define the emotional tone of this album, giving every frame a celebratory warmth.',
-    },
-    {
-      image:
-        'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1600&q=80',
-      caption:
-        'This sequence focuses on movement, anticipation, and the joy that builds around the couple before the main event.',
-    },
-    {
-      image:
-        'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80',
-      caption:
-        'We used backlight and negative space to let the couple stand out with a soft, memorable glow.',
-    },
-  ],
-  'dipshikhar-aayojon': [
-    {
-      image:
-        'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=1600&q=80',
-      caption:
-        'This frame leans into ritual, costume, and expression, turning a quiet moment into a timeless portrait.',
-    },
-    {
-      image:
-        'https://images.unsplash.com/photo-1516557070061-c3d1653fa646?auto=format&fit=crop&w=1600&q=80',
-      caption:
-        'Detail shots help anchor the full story by preserving the handmade textures and ceremonial styling of the day.',
-    },
-    {
-      image:
-        'https://images.unsplash.com/photo-1529636798458-92182e662485?auto=format&fit=crop&w=1600&q=80',
-      caption:
-        'We balanced emotion with atmosphere so the album feels intimate without losing the scale of the celebration.',
-    },
-  ],
-  'gaye-holud': [
-    {
-      image:
-        'https://images.unsplash.com/photo-1529636798458-92182e662485?auto=format&fit=crop&w=1600&q=80',
-      caption:
-        'Bright florals, laughter, and family energy create the signature rhythm of a holud day, and this frame captures that perfectly.',
-    },
-    {
-      image:
-        'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=1600&q=80',
-      caption:
-        'Color and styling are treated as storytelling elements here, adding personality to every portrait and candid glance.',
-    },
-    {
-      image:
-        'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1600&q=80',
-      caption:
-        'The album moves between playful interaction and refined composition, keeping the mood festive but polished.',
-    },
-  ],
-  'shonar-shondha': [
-    {
-      image:
-        'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1600&q=80',
-      caption:
-        'Evening light turns ordinary surroundings into something tender and cinematic, which is the heart of this story.',
-    },
-    {
-      image:
-        'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=1600&q=80',
-      caption:
-        'We framed the couple with warmth and distance so the silence between them could be felt as much as it was seen.',
-    },
-    {
-      image:
-        'https://images.unsplash.com/photo-1469371670807-013ccf25f16a?auto=format&fit=crop&w=1600&q=80',
-      caption:
-        'Decor, lighting, and gesture all work together to build the soft golden identity of the album.',
-    },
-  ],
-  'bridal-portrait': [
-    {
-      image:
-        'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1600&q=80',
-      caption:
-        'This portrait uses clean framing and expressive styling to highlight confidence, grace, and stillness.',
-    },
-    {
-      image:
-        'https://images.unsplash.com/photo-1516557070061-c3d1653fa646?auto=format&fit=crop&w=1600&q=80',
-      caption:
-        'Close detail photographs give texture to the narrative and make the beauty choices part of the visual memory.',
-    },
-    {
-      image:
-        'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=1600&q=80',
-      caption:
-        'The overall portrait direction stays natural, but every angle is refined enough to feel editorial.',
-    },
-  ],
-  'reception-glow': [
-    {
-      image:
-        'https://images.unsplash.com/photo-1469371670807-013ccf25f16a?auto=format&fit=crop&w=1600&q=80',
-      caption:
-        'This wide frame introduces the visual richness of the reception with layered light, decor, and stage atmosphere.',
-    },
-    {
-      image:
-        'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=1600&q=80',
-      caption:
-        'We focused on glow and softness so the couple remains the emotional center even inside a busy celebration.',
-    },
-    {
-      image:
-        'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80',
-      caption:
-        'Reception portraits here are treated like cinematic pauses that slow the story down for a more intimate reading.',
-    },
-  ],
-  'outdoor-love-story': [
-    {
-      image:
-        'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80',
-      caption:
-        'An open outdoor setting gives the couple room to move naturally, which keeps the romance easy and unforced.',
-    },
-    {
-      image:
-        'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1600&q=80',
-      caption:
-        'This composition leans on surrounding landscape and soft light to create a spacious, dreamlike feeling.',
-    },
-    {
-      image:
-        'https://images.unsplash.com/photo-1529636798458-92182e662485?auto=format&fit=crop&w=1600&q=80',
-      caption:
-        'The final frames keep the mood tender and grounded, letting the environment quietly support the couple story.',
-    },
-  ],
-};
+const albumStoryGalleries = {};
 
-const packageShowcase = normalizePackageShowcase([
-  {
-    name: 'Sonaton Package',
-    link: '/packages/sonaton',
-    image:
-      'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=900&q=80',
-  },
-  {
-    name: 'Muslim Package',
-    link: '/packages/muslim',
-    image:
-      'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=900&q=80',
-  },
-]);
+const packageShowcase = normalizePackageShowcase([]);
 
 const addOnsCatalog = [
-  {
-    name: 'Storybook',
-    image:
-      'https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=700&q=80',
-  },
-  {
-    name: 'Additional Prints',
-    image:
-      'https://images.unsplash.com/photo-1516557070061-c3d1653fa646?auto=format&fit=crop&w=700&q=80',
-  },
-  {
-    name: 'Additional Photographer',
-    image:
-      'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=700&q=80',
-  },
-  {
-    name: 'Additional Cinematographer',
-    image:
-      'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=700&q=80',
-  },
-  {
-    name: 'Drone',
-    image:
-      'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=700&q=80',
-  },
-  {
-    name: 'Additional Session',
-    image:
-      'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=700&q=80',
-  },
-  {
-    name: 'Homeshoot',
-    image:
-      'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=700&q=80',
-  },
-  {
-    name: 'Quick Delivery',
-    image:
-      'https://images.unsplash.com/photo-1513278974582-3e1b4a4fa21d?auto=format&fit=crop&w=700&q=80',
-  },
-  {
-    name: 'Photoframe',
-    image:
-      'https://images.unsplash.com/photo-1469371670807-013ccf25f16a?auto=format&fit=crop&w=700&q=80',
-  },
+  { name: 'Storybook', image: '' },
+  { name: 'Additional Prints', image: '' },
+  { name: 'Additional Photographer', image: '' },
+  { name: 'Additional Cinematographer', image: '' },
+  { name: 'Drone', image: '' },
+  { name: 'Additional Session', image: '' },
+  { name: 'Homeshoot', image: '' },
+  { name: 'Quick Delivery', image: '' },
+  { name: 'Photoframe', image: '' },
 ];
 
 const foundingMembers = [
   {
     name: 'Avijit Nandy',
     role: 'Co-Founder & Core Photographer',
-    image:
-      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80',
+    image: '',
     facebookUrl: 'https://facebook.com',
     instagramUrl: 'https://instagram.com',
     youtubeUrl: '',
@@ -441,8 +159,7 @@ const foundingMembers = [
   {
     name: 'Amin Abu Ahmed Ashraf (Dolon)',
     role: 'Co-Founder & Core Photographer',
-    image:
-      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=600&q=80',
+    image: '',
     facebookUrl: 'https://facebook.com',
     instagramUrl: 'https://instagram.com',
     youtubeUrl: '',
@@ -474,8 +191,7 @@ const officeInfo = {
 };
 
 const officeTour = {
-  image:
-    'https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80',
+  image: '',
   title: 'Life at Capture Memories',
   subtitle:
     'The team also includes skilled editors who work behind the scenes to enhance the images, create the story, and produce a final product that exceeds your expectations.',
@@ -1495,8 +1211,8 @@ function Footer({ navigate }) {
         </div>
       </div>
 
-      <div className="bg-black px-6 py-5">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 text-[11px] uppercase tracking-[0.2em] text-white/70 md:flex-row">
+      <div className="bg-black px-8 py-5 md:px-10">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-center gap-2 text-center text-[11px] uppercase tracking-[0.2em] text-white/70 md:flex-row md:gap-10">
           <p>Copyright 2026 {siteIdentity.brand} Inc.</p>
           <p>Made with love by Clockosoft</p>
         </div>
@@ -1555,8 +1271,7 @@ function HomePage({ navigate }) {
         }
       } catch (_error) {
         if (!ignore) {
-          // Only fall back after the live fetch fails so hardcoded slides do not flash first.
-          setSlides(defaultHeroSlides);
+          setSlides([]);
         }
       } finally {
         if (!ignore) {
@@ -1595,7 +1310,7 @@ function HomePage({ navigate }) {
 
   return (
     <>
-      <section className="relative min-h-[82vh] overflow-hidden bg-stone-100">
+      <section id="home-hero-slider" className="relative min-h-[88svh] overflow-hidden bg-stone-100 md:min-h-[92vh]">
         {hasVisibleSlides ? (
           <>
             {visibleSlides.map((item, idx) => (
@@ -1607,7 +1322,7 @@ function HomePage({ navigate }) {
                 <img
                   src={item.image}
                   alt={item.title || `Hero slide ${idx + 1}`}
-                  className="h-full min-h-[82vh] w-full object-cover"
+                  className="h-full min-h-[88svh] w-full object-cover md:min-h-[92vh]"
                 />
               </div>
             ))}
@@ -1649,8 +1364,8 @@ function HomePage({ navigate }) {
 
       <section className="bg-white px-6 py-20 md:py-24">
         <div className="mx-auto max-w-5xl text-center">
-          {siteContentReady ? (
-            <img src={siteIdentity.logoUrl || '/icon.svg'} alt={`${siteIdentity.brand} logo`} className="mx-auto h-16 w-16 md:h-20 md:w-20" />
+          {siteContentReady && siteIdentity.logoUrl ? (
+            <img src={siteIdentity.logoUrl} alt={`${siteIdentity.brand} logo`} className="mx-auto h-16 w-16 md:h-20 md:w-20" />
           ) : (
             <div className="mx-auto h-16 w-16 rounded-[1.25rem] bg-stone-200 md:h-20 md:w-20" />
           )}
@@ -1663,27 +1378,43 @@ function HomePage({ navigate }) {
 
           <h3 className="mt-14 font-serif text-3xl italic text-stone-900 md:text-4xl">Featured Albums</h3>
 
-          <div className="mt-14 grid gap-x-6 gap-y-12 md:grid-cols-2">
-            {featuredAlbums.map((album) => (
-              <button
-                key={album.slug || album.title}
-                type="button"
-                onClick={() => navigate(`/sample-works/${album.slug}`)}
-                className="group text-center"
-              >
-                <div className="overflow-hidden bg-stone-100 shadow-sm">
-                  <img
-                    src={album.image}
-                    alt={album.title}
-                    className="aspect-[4/3] w-full object-cover transition duration-500 group-hover:scale-105"
-                  />
+          {siteContentReady ? (
+            <div className="mt-14 grid gap-x-6 gap-y-12 md:grid-cols-2">
+              {featuredAlbums.map((album) => (
+                <button
+                  key={album.slug || album.title}
+                  type="button"
+                  onClick={() => navigate(`/sample-works/${album.slug}`)}
+                  className="group text-center"
+                >
+                  <div className="overflow-hidden bg-stone-100 shadow-sm">
+                    {album.image ? (
+                      <img
+                        src={album.image}
+                        alt={album.title}
+                        loading="lazy"
+                        className="aspect-[4/3] w-full object-cover transition duration-500 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="aspect-[4/3] w-full bg-stone-200" />
+                    )}
+                  </div>
+                  <p className="mt-4 text-base text-blue-700 transition group-hover:text-blue-900 md:text-lg">
+                    {album.title}
+                  </p>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-14 grid gap-x-6 gap-y-12 md:grid-cols-2">
+              {[0, 1, 2, 3].map((item) => (
+                <div key={item} className="text-center">
+                  <div className="aspect-[4/3] w-full bg-stone-200 shadow-sm" />
+                  <div className="mx-auto mt-4 h-6 w-40 rounded-full bg-stone-200" />
                 </div>
-                <p className="mt-4 text-base text-blue-700 transition group-hover:text-blue-900 md:text-lg">
-                  {album.title}
-                </p>
-              </button>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </>
@@ -1756,11 +1487,18 @@ function AboutPage({ navigate }) {
               return (
                 <article key={member.name} className="flex flex-col items-center text-center">
                   <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-stone-100 shadow-sm md:h-32 md:w-32">
-                    <img
-                      src={member.image}
-                      alt={member.name}
-                      className="h-full w-full object-cover grayscale"
-                    />
+                    {member.image ? (
+                      <img
+                        src={member.image}
+                        alt={member.name}
+                        loading="lazy"
+                        className="h-full w-full object-cover grayscale"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-stone-200 text-3xl font-semibold text-stone-500">
+                        {member.name.charAt(0)}
+                      </div>
+                    )}
                   </div>
                   <h3 className="mt-6 text-2xl font-semibold text-stone-950">{member.name}</h3>
                   <p className="mt-2 text-base text-stone-600">{member.role}</p>
@@ -1813,15 +1551,20 @@ function AboutPage({ navigate }) {
                 />
               </div>
             </div>
-          ) : (
+          ) : officeMedia.image ? (
             <div className="mx-auto mt-10 max-w-3xl overflow-hidden rounded-[2rem] border border-stone-200 bg-stone-100 shadow-sm">
               <div className="relative aspect-video overflow-hidden">
                 <img
                   src={officeMedia.image}
                   alt="Office tour preview"
+                  loading="lazy"
                   className="h-full w-full object-cover"
                 />
               </div>
+            </div>
+          ) : (
+            <div className="mx-auto mt-10 max-w-3xl overflow-hidden rounded-[2rem] border border-stone-200 bg-stone-100 shadow-sm">
+              <div className="aspect-video bg-stone-200" />
             </div>
           )}
         </div>
@@ -1892,39 +1635,177 @@ function getPackageDetailSections(item) {
   return normalizePackageDetailSections(item);
 }
 
+function formatPackageTextLegacy(value = '') {
+  return String(value || '')
+    .replace(/\s*\+\s*/g, ' · ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+function getPackageEyebrowLegacy(item) {
+  return formatPackageText(item);
+}
+
+function formatPackageText(value = '') {
+  return String(value || '')
+    .replace(/\s*\+\s*/g, ' / ')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
+function getPackageEyebrow(item) {
+  const searchableText = [item.subtitle, item.secondary?.title, ...(item.features || [])].join(' ').toLowerCase();
+  const hasPhoto = searchableText.includes('photograph') || searchableText.includes('photo');
+  const hasCinema =
+    searchableText.includes('cinematograph') ||
+    searchableText.includes('video') ||
+    searchableText.includes('film') ||
+    searchableText.includes('reel');
+
+  if (hasPhoto && hasCinema) {
+    return 'Photography + Cinema';
+  }
+
+  if (hasCinema) {
+    return 'Cinematography';
+  }
+
+  if (hasPhoto) {
+    return 'Photography';
+  }
+
+  if (searchableText.includes('destination') || searchableText.includes('travel')) {
+    return 'Destination Story';
+  }
+
+  if (searchableText.includes('outdoor')) {
+    return 'Outdoor Story';
+  }
+
+  return 'Wedding Package';
+}
+
+function getPackageHeroIcon(item) {
+  const searchableText = [item.subtitle, item.secondary?.title, ...(item.features || [])].join(' ').toLowerCase();
+  const hasPhoto = searchableText.includes('photograph') || searchableText.includes('photo');
+  const hasCinema =
+    searchableText.includes('cinematograph') ||
+    searchableText.includes('video') ||
+    searchableText.includes('film') ||
+    searchableText.includes('reel');
+
+  if (!hasPhoto && hasCinema) {
+    return Video;
+  }
+
+  return Camera;
+}
+
+function getPackageFeatureMeta(feature = '', index = 0, context = '') {
+  const normalizedFeature = [context, feature].filter(Boolean).join(' ').toLowerCase();
+
+  if (normalizedFeature.includes('photograph') || normalizedFeature.includes('photo')) {
+    return { Icon: Camera, label: formatPackageText(feature) };
+  }
+
+  if (
+    normalizedFeature.includes('cinematograph') ||
+    normalizedFeature.includes('video') ||
+    normalizedFeature.includes('film') ||
+    normalizedFeature.includes('reel')
+  ) {
+    return { Icon: Video, label: formatPackageText(feature) };
+  }
+
+  if (
+    normalizedFeature.includes('album') ||
+    normalizedFeature.includes('book') ||
+    normalizedFeature.includes('delivery') ||
+    normalizedFeature.includes('drive') ||
+    normalizedFeature.includes('pendrive')
+  ) {
+    return { Icon: Gift, label: formatPackageText(feature) };
+  }
+
+  if (
+    normalizedFeature.includes('drone') ||
+    normalizedFeature.includes('lead') ||
+    normalizedFeature.includes('travel') ||
+    normalizedFeature.includes('outdoor') ||
+    normalizedFeature.includes('day') ||
+    normalizedFeature.includes('hour') ||
+    normalizedFeature.includes('duration') ||
+    normalizedFeature.includes('coverage')
+  ) {
+    return { Icon: Sparkles, label: formatPackageText(feature) };
+  }
+
+  return {
+    Icon: PACKAGE_FALLBACK_ICONS[index % PACKAGE_FALLBACK_ICONS.length],
+    label: formatPackageText(feature),
+  };
+}
+
+function PackageFeatureRow({
+  feature,
+  index = 0,
+  context = '',
+  bulletClassName = 'bg-[#ce4257]',
+  itemClassName = 'flex items-start gap-3',
+  textClassName = 'text-[15px] leading-7 text-[#4f000b]',
+}) {
+  const { label } = getPackageFeatureMeta(feature, index, context);
+
+  return (
+    <li className={itemClassName}>
+      <span className={`mt-[0.55rem] h-2 w-2 shrink-0 rounded-full ${bulletClassName}`} />
+      <p className={textClassName}>{label}</p>
+    </li>
+  );
+}
+
 function PackageDetailsModal({ item, navigate, onClose }) {
   const sections = getPackageDetailSections(item);
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/45 px-4 py-8"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/55 px-4 py-8"
       onClick={onClose}
     >
       <div
-        className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto bg-white px-6 py-10 text-center shadow-2xl md:px-10 md:py-12"
+        className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-[1.75rem] border border-slate-300 bg-[linear-gradient(180deg,#f9fafb_0%,#f3f4f6_55%,#e5e7eb_100%)] px-6 py-10 text-center shadow-2xl md:px-10 md:py-12"
         onClick={(event) => event.stopPropagation()}
       >
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 text-sm uppercase tracking-[0.2em] text-stone-500 transition hover:text-stone-950"
+          className="absolute right-4 top-4 text-sm uppercase tracking-[0.2em] text-slate-500 transition hover:text-slate-900"
         >
           Close
         </button>
 
-        <h2 className="mx-auto max-w-2xl text-2xl font-semibold uppercase text-stone-950 md:text-4xl">
+        <h2 className="mx-auto max-w-2xl text-2xl font-semibold uppercase text-slate-900 md:text-4xl">
           {item.title} Details
         </h2>
 
         <div className="mt-10 space-y-10">
           {sections.map((section, sectionIndex) => (
             <div key={`${item.title}-section-${sectionIndex}`}>
-              {section.title && <h3 className="text-xl font-semibold text-stone-950 md:text-2xl">{section.title}</h3>}
-              {section.price && <p className="mt-3 text-lg text-stone-800">{section.price}</p>}
-              <div className="mt-4 space-y-1 text-base leading-8 text-stone-800">
-                {section.lines.map((line, lineIndex) => (
-                  <p key={`${item.title}-section-${sectionIndex}-line-${lineIndex}`}>{line}</p>
-                ))}
+              {section.title && <h3 className="text-xl font-semibold text-slate-900 md:text-2xl">{section.title}</h3>}
+              {section.price && <p className="mt-3 text-lg text-slate-700">{section.price}</p>}
+              <div className="mt-5 rounded-[1.15rem] border border-slate-300/80 bg-white/70 px-4 py-3 text-left shadow-[0_10px_24px_rgba(31,41,55,0.06)]">
+                <ul className="space-y-2.5">
+                  {section.lines.map((line, lineIndex) => (
+                    <PackageFeatureRow
+                      key={`${item.title}-section-${sectionIndex}-line-${lineIndex}`}
+                      feature={line}
+                      index={lineIndex}
+                      context={section.title}
+                      bulletClassName="bg-slate-500"
+                      textClassName="text-base leading-7 text-slate-800"
+                    />
+                  ))}
+                </ul>
               </div>
             </div>
           ))}
@@ -1936,7 +1817,7 @@ function PackageDetailsModal({ item, navigate, onClose }) {
             onClose();
             navigate('/book');
           }}
-          className="mt-12 border border-stone-900 px-8 py-3 text-lg text-stone-950 transition hover:bg-stone-900 hover:text-white"
+          className="mt-12 rounded-full border border-slate-700 bg-[linear-gradient(135deg,#1f2937_0%,#374151_65%,#6b7280_100%)] px-8 py-3 text-lg text-white transition hover:brightness-105"
         >
           Book us now!
         </button>
@@ -1947,39 +1828,79 @@ function PackageDetailsModal({ item, navigate, onClose }) {
 
 function PackageInfoCard({ item, onOpenDetails }) {
   return (
-    <article className="mx-auto flex h-full w-full max-w-sm flex-col items-center rounded-[2rem] border border-stone-200 bg-stone-50 px-6 py-8 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-stone-300 hover:bg-white hover:shadow-xl md:px-8">
-      <h3 className="max-w-xs text-2xl font-semibold uppercase leading-tight text-stone-950 md:text-3xl">{item.title}</h3>
-      <p className="mt-6 text-4xl font-light text-stone-950 md:text-5xl">{item.price}</p>
-      {item.subtitle && <p className="mt-4 text-lg text-stone-700">{item.subtitle}</p>}
+    <article className="mx-auto flex h-full w-full max-w-sm flex-col rounded-[2rem] bg-[linear-gradient(140deg,#4b5563_0%,#374151_48%,#111827_100%)] p-[1px] shadow-[0_22px_50px_rgba(17,24,39,0.22)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_28px_60px_rgba(17,24,39,0.3)]">
+      <div className="flex h-full flex-col overflow-hidden rounded-[calc(2rem-1px)] bg-[linear-gradient(180deg,#f9fafb_0%,#f3f4f6_55%,#e5e7eb_100%)]">
+        <div className="relative overflow-hidden px-5 py-5 text-center text-white md:px-7">
+          <div className="absolute inset-0 bg-[linear-gradient(135deg,#1f2937_0%,#374151_55%,#6b7280_100%)]" />
+          <div className="absolute -right-10 top-0 h-28 w-28 rounded-full bg-white/10 blur-2xl" />
+          <div className="absolute -left-10 bottom-0 h-24 w-24 rounded-full bg-slate-200/20 blur-2xl" />
 
-      <div className="mt-8 space-y-1 text-[15px] leading-8 text-stone-900">
-        {item.features.map((feature, featureIndex) => (
-          <p key={`${item.title}-feature-${featureIndex}`}>{feature}</p>
-        ))}
-      </div>
-
-      {item.secondary && (
-        <div className="mt-8 w-full border-t border-stone-300 pt-6">
-          <h4 className="text-2xl font-semibold uppercase text-stone-950">{item.secondary.title}</h4>
-          <p className="mt-6 text-4xl font-light text-stone-950 md:text-5xl">{item.secondary.price}</p>
-          <div className="mt-8 space-y-1 text-[15px] leading-8 text-stone-900">
-            {item.secondary.features.map((feature, featureIndex) => (
-              <p key={`${item.title}-secondary-feature-${featureIndex}`}>{feature}</p>
-            ))}
+          <div className="relative">
+            <h3 className="mx-auto mt-3 max-w-xs text-xl font-semibold uppercase leading-tight text-white md:text-2xl">
+              {item.title}
+            </h3>
+            {item.subtitle && <p className="mt-2 text-sm leading-6 text-[#ffd7c1]">{item.subtitle}</p>}
           </div>
         </div>
-      )}
 
-      {item.note && <p className="mt-8 max-w-xs text-[15px] leading-8 text-stone-900">{item.note}</p>}
+        <div className="flex flex-1 flex-col px-5 pb-4 pt-3.5 md:px-6">
+          <div className="rounded-[1.5rem] border border-slate-300/70 bg-white/80 px-4 py-3 text-center shadow-[0_12px_28px_rgba(31,41,55,0.08)] backdrop-blur-sm">
+            <p className="text-[11px] uppercase tracking-[0.3em] text-slate-600 md:text-xs">Package Price</p>
+            <p className="mt-1.5 font-serif text-3xl leading-none text-slate-900 md:text-4xl">{item.price}</p>
+          </div>
 
-      <div className="mt-auto flex w-full justify-center pt-10">
-        <button
-          type="button"
-          onClick={() => onOpenDetails(item)}
-          className="details-glow-button w-full max-w-[300px] rounded-full border border-stone-900 bg-white px-6 py-3 text-xl text-stone-950 transition hover:bg-stone-900 hover:text-white"
-        >
-          Details
-        </button>
+          <div className="mt-3.5 rounded-[1.15rem] border border-slate-300/70 bg-white/75 px-4 py-2 text-left shadow-[0_8px_20px_rgba(31,41,55,0.06)]">
+            <ul className="space-y-1.5">
+              {item.features.map((feature, featureIndex) => (
+                <PackageFeatureRow
+                  key={`${item.title}-feature-${featureIndex}`}
+                  feature={feature}
+                  index={featureIndex}
+                  bulletClassName="bg-slate-500"
+                  textClassName="text-[15px] leading-7 text-slate-800"
+                />
+              ))}
+            </ul>
+          </div>
+
+          {item.secondary && (
+            <div className="mt-3.5 rounded-[1.35rem] border border-slate-300/70 bg-[linear-gradient(135deg,rgba(107,114,128,0.12)_0%,rgba(148,163,184,0.16)_100%)] px-4 py-3 text-left">
+              <p className="text-[11px] uppercase tracking-[0.28em] text-slate-700 md:text-xs">{item.secondary.title}</p>
+              <p className="mt-1.5 font-serif text-2xl leading-none text-slate-900 md:text-3xl">{item.secondary.price}</p>
+              <div className="mt-2.5 rounded-[1rem] border border-slate-300/70 bg-white/70 px-3.5 py-2.5">
+                <ul className="space-y-1">
+                {item.secondary.features.map((feature, featureIndex) => (
+                  <PackageFeatureRow
+                    key={`${item.title}-secondary-feature-${featureIndex}`}
+                    feature={feature}
+                    index={featureIndex}
+                    context={item.secondary.title}
+                    bulletClassName="bg-slate-500"
+                    textClassName="text-sm leading-7 text-slate-800"
+                  />
+                ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {item.note && (
+            <div className="mt-3.5 rounded-[1.2rem] border border-slate-300/70 bg-slate-50 px-4 py-2.5">
+              <p className="text-sm leading-6 text-slate-700">{item.note}</p>
+            </div>
+          )}
+
+          <div className="mt-auto pt-4">
+            <button
+              type="button"
+              onClick={() => onOpenDetails(item)}
+              className="details-glow-button w-full rounded-full border border-slate-700 bg-[linear-gradient(135deg,#1f2937_0%,#374151_65%,#6b7280_100%)] px-6 py-2.5 text-lg text-white transition hover:brightness-105"
+            >
+              Details
+            </button>
+          </div>
+
+        </div>
       </div>
     </article>
   );
@@ -1994,7 +1915,7 @@ function PackageTabsPage({ title, description, tabs, navigate }) {
     <>
       <section className="border-b border-stone-200 bg-white px-6 py-16 md:py-20">
         <div className="mx-auto max-w-5xl text-center">
-          <h1 className="text-4xl font-semibold uppercase text-stone-950 md:text-6xl">{title}</h1>
+          <h1 className="text-2xl font-semibold uppercase text-stone-950 md:text-4xl">{title}</h1>
           <p className="mx-auto mt-8 max-w-3xl text-base leading-8 text-stone-700 md:text-lg">{description}</p>
 
           <div className="mt-10 flex items-center justify-center gap-6 border-b border-stone-200">
@@ -2023,7 +1944,7 @@ function PackageTabsPage({ title, description, tabs, navigate }) {
           {currentTab.sections.map((section) => (
             <div key={section.title} className="text-center">
               <h2 className="text-3xl font-semibold text-stone-950 md:text-5xl">{section.title}</h2>
-              <div className={`mt-16 grid gap-14 ${section.gridClassName}`}>
+              <div className={`mt-16 grid gap-10 ${section.gridClassName}`}>
                 {section.items.map((item) => (
                   <PackageInfoCard key={item.title} item={item} onOpenDetails={setSelectedPackage} />
                 ))}
@@ -2051,7 +1972,7 @@ function PackageCardsPage({ title, description, items, navigate, gridClassName =
   if (!siteContentReady) {
     return (
       <>
-        <section className="border-b border-stone-200 bg-white px-6 py-16 md:py-20">
+        <section className="border-b border-stone-200 bg-white px-6 py-10 md:py-12">
           <div className="mx-auto max-w-5xl text-center">
             <div className="mx-auto h-12 w-full max-w-md rounded-full bg-stone-200" />
             <div className="mx-auto mt-8 h-24 w-full max-w-3xl rounded-[1.5rem] bg-stone-200" />
@@ -2059,7 +1980,7 @@ function PackageCardsPage({ title, description, items, navigate, gridClassName =
         </section>
 
         <section className="bg-white px-6 py-16 md:py-20">
-          <div className={`mx-auto grid max-w-7xl gap-14 ${gridClassName}`}>
+          <div className={`mx-auto grid max-w-7xl gap-10 ${gridClassName}`}>
             {Array.from({ length: 3 }).map((_, index) => (
               <div
                 key={`package-loading-${index}`}
@@ -2084,15 +2005,15 @@ function PackageCardsPage({ title, description, items, navigate, gridClassName =
 
   return (
     <>
-      <section className="border-b border-stone-200 bg-white px-6 py-16 md:py-20">
+      <section className="border-b border-stone-200 bg-white px-6 py-10 md:py-12">
         <div className="mx-auto max-w-5xl text-center">
           <h1 className="text-4xl font-semibold uppercase text-stone-950 md:text-6xl">{title}</h1>
-          <p className="mx-auto mt-8 max-w-3xl text-base leading-8 text-stone-700 md:text-lg">{description}</p>
+          <p className="mx-auto mt-4 max-w-3xl text-base leading-8 text-stone-700 md:text-lg">{description}</p>
         </div>
       </section>
 
       <section className="bg-white px-6 py-16 md:py-20">
-        <div className={`mx-auto grid max-w-7xl gap-14 ${gridClassName}`}>
+        <div className={`mx-auto grid max-w-7xl gap-10 ${gridClassName}`}>
           {items.map((item) => (
             <PackageInfoCard key={item.title} item={item} onOpenDetails={setSelectedPackage} />
           ))}
@@ -2270,16 +2191,25 @@ function PackagesPage({ navigate }) {
                 key={item.name}
                 type="button"
                 onClick={() => navigate(item.link)}
-                className="group relative min-h-[360px] overflow-hidden bg-stone-100 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+                className="group relative min-h-[300px] overflow-hidden bg-stone-100 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
               >
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-black/35 transition group-hover:bg-black/30" />
+                {item.image ? (
+                  <>
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      loading="lazy"
+                      className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-black/35 transition group-hover:bg-black/30" />
+                  </>
+                ) : (
+                  <div className="absolute inset-0 bg-stone-200" />
+                )}
                 <div className="relative flex h-full items-center justify-center p-8">
-                  <h2 className="font-serif text-4xl text-white md:text-[2.7rem]">{item.name}</h2>
+                  <h2 className={`font-serif text-4xl md:text-[2.7rem] ${item.image ? 'text-white' : 'text-stone-950'}`}>
+                    {item.name}
+                  </h2>
                 </div>
               </button>
             ))}
@@ -2308,11 +2238,18 @@ function AddOnsPage() {
             {addOnsCatalog.map((item) => (
               <article key={item.name} className="flex flex-col items-center text-center">
                 <div className="group relative w-full max-w-[220px] overflow-hidden rounded-[1.75rem] border border-stone-200 bg-stone-50 shadow-sm">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="h-36 w-full object-cover transition duration-700 group-hover:scale-105"
-                  />
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      loading="lazy"
+                      className="h-36 w-full object-cover transition duration-700 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-36 w-full items-center justify-center bg-stone-100 text-stone-400">
+                      <Gift className="h-8 w-8" />
+                    </div>
+                  )}
                 </div>
                 <h2 className="mt-6 text-xl font-semibold text-stone-950 md:text-2xl">{item.name}</h2>
               </article>
@@ -2355,6 +2292,7 @@ function AlbumStoryPage({ album, navigate }) {
                   <img
                     src={item.image}
                     alt={item.caption || album.title}
+                    loading="lazy"
                     className="aspect-[16/10] w-full object-cover"
                   />
                 </div>
@@ -2431,7 +2369,16 @@ function SampleWorksPage() {
               className="group overflow-hidden rounded-[1.75rem] border border-gray-200 bg-gray-50"
             >
               <div className="h-80 overflow-hidden">
-                <img src={work.image} alt={work.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-110" />
+                {work.image ? (
+                  <img
+                    src={work.image}
+                    alt={work.title}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-gray-100" />
+                )}
               </div>
             </div>
           ))}
@@ -2568,6 +2515,109 @@ function BookPage() {
         </div>
       </div>
     </section>
+  );
+}
+
+function FloatingWhatsAppButton() {
+  const { bookUs } = useSiteContent();
+  const bookUsContent = normalizeBookUsContent(bookUs);
+  const whatsappLink = createWhatsAppLink(bookUsContent);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const heroSection = document.getElementById('home-hero-slider');
+
+    if (!heroSection) {
+      setIsVisible(true);
+      return undefined;
+    }
+
+    const updateVisibility = () => {
+      const heroBottom = heroSection.offsetTop + heroSection.offsetHeight;
+      setIsVisible(window.scrollY > heroBottom - 32);
+    };
+
+    updateVisibility();
+    window.addEventListener('scroll', updateVisibility, { passive: true });
+    window.addEventListener('resize', updateVisibility);
+
+    return () => {
+      window.removeEventListener('scroll', updateVisibility);
+      window.removeEventListener('resize', updateVisibility);
+    };
+  }, []);
+
+  if (!whatsappLink || !isVisible) {
+    return null;
+  }
+
+  return (
+    <a
+      href={whatsappLink}
+      target="_blank"
+      rel="noreferrer"
+      aria-label={`Book on WhatsApp at ${bookUsContent.whatsappNumber}`}
+      className="group fixed bottom-4 right-4 z-50 inline-flex h-16 w-16 items-center justify-center rounded-full border border-emerald-200/70 bg-[radial-gradient(circle_at_30%_30%,#ffffff_0%,#ecfdf3_40%,#dcfce7_100%)] shadow-[0_16px_35px_rgba(16,185,129,0.32)] transition duration-300 hover:-translate-y-1 hover:scale-[1.05] hover:shadow-[0_22px_45px_rgba(16,185,129,0.4)] md:bottom-7 md:right-7 md:h-20 md:w-20"
+    >
+      <span
+        className="pointer-events-none absolute inset-0 rounded-full border border-emerald-300/70 opacity-70 motion-safe:animate-ping"
+        style={{ animationDuration: '2.4s' }}
+      />
+      <span className="pointer-events-none absolute inset-[3px] rounded-full border border-emerald-200/70" />
+      <span className="relative z-10 inline-flex h-11 w-11 items-center justify-center rounded-full bg-[linear-gradient(145deg,#16a34a_0%,#22c55e_55%,#4ade80_100%)] shadow-[0_14px_30px_rgba(5,150,105,0.35)] transition duration-300 group-hover:scale-110 md:h-14 md:w-14">
+        <MessageCircle className="h-6 w-6 text-white md:h-8 md:w-8" strokeWidth={2.4} />
+      </span>
+    </a>
+  );
+}
+
+function FloatingBookUsButton() {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const heroSection = document.getElementById('home-hero-slider');
+
+    if (!heroSection) {
+      setIsVisible(true);
+      return undefined;
+    }
+
+    const updateVisibility = () => {
+      const heroBottom = heroSection.offsetTop + heroSection.offsetHeight;
+      setIsVisible(window.scrollY > heroBottom - 32);
+    };
+
+    updateVisibility();
+    window.addEventListener('scroll', updateVisibility, { passive: true });
+    window.addEventListener('resize', updateVisibility);
+
+    return () => {
+      window.removeEventListener('scroll', updateVisibility);
+      window.removeEventListener('resize', updateVisibility);
+    };
+  }, []);
+
+  if (!isVisible) {
+    return null;
+  }
+
+  return (
+    <a
+      href="/book"
+      aria-label="Go to book us page"
+      className="group fixed bottom-4 left-4 z-50 inline-flex h-16 w-16 items-center justify-center rounded-full border border-sky-200/80 bg-[radial-gradient(circle_at_30%_30%,#ffffff_0%,#eff6ff_42%,#dbeafe_100%)] shadow-[0_16px_35px_rgba(37,99,235,0.28)] transition duration-300 hover:-translate-y-1 hover:scale-[1.05] hover:shadow-[0_22px_45px_rgba(37,99,235,0.36)] md:bottom-7 md:left-7 md:h-20 md:w-20"
+    >
+      <span
+        className="pointer-events-none absolute inset-0 rounded-full border border-sky-300/80 opacity-70 motion-safe:animate-ping"
+        style={{ animationDuration: '2.4s' }}
+      />
+      <span className="pointer-events-none absolute inset-[3px] rounded-full border border-sky-200/80" />
+      <span className="relative z-10 inline-flex h-11 w-11 items-center justify-center rounded-full bg-[linear-gradient(145deg,#2563eb_0%,#3b82f6_55%,#60a5fa_100%)] px-1 text-center shadow-[0_14px_30px_rgba(37,99,235,0.35)] transition duration-300 group-hover:scale-110 md:h-14 md:w-14">
+        <span className="text-[9px] font-semibold uppercase leading-tight tracking-[0.08em] text-white md:text-[10px]">
+          Book Us
+        </span>
+      </span>
+    </a>
   );
 }
 
@@ -2751,6 +2801,8 @@ export default function ChitrogolpoInspiredFullSite() {
         <div className={`${isAdminRoute ? '' : 'chitro-site '}min-h-screen bg-white text-gray-900`}>
           <Header pathname={pathname} navigate={navigate} />
           <main>{page}</main>
+          {!isAdminRoute && <FloatingBookUsButton />}
+          {!isAdminRoute && <FloatingWhatsAppButton />}
           <Footer navigate={navigate} />
         </div>
       </SiteContentContext.Provider>

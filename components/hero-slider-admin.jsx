@@ -1875,7 +1875,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                     value={form.imageUrl}
                     onChange={(event) => setForm((current) => ({ ...current, imageUrl: event.target.value }))}
                     className="mt-2 w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm outline-none transition focus:border-stone-500"
-                    placeholder="https://your-image-url.com/slide.jpg"
+                    placeholder="Paste image URL"
                   />
                 </label>
 
@@ -2151,7 +2151,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                     value={featuredAlbumForm.imageUrl}
                     onChange={(event) => setFeaturedAlbumForm((current) => ({ ...current, imageUrl: event.target.value }))}
                     className="mt-2 w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm outline-none transition focus:border-stone-500"
-                    placeholder="https://your-image-url.com/featured-album.jpg"
+                    placeholder="Paste image URL"
                   />
                 </label>
 
@@ -2246,7 +2246,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                             value={item.imageUrl}
                             onChange={(event) => updateFeaturedAlbumGalleryItem(item.id, { imageUrl: event.target.value })}
                             className="mt-2 w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm outline-none transition focus:border-stone-500"
-                            placeholder="https://your-image-url.com/gallery-image.jpg"
+                            placeholder="Paste image URL"
                           />
                         </label>
 

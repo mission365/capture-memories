@@ -396,7 +396,7 @@ export default function SampleWorksAdminPanel({
                           value={item.image}
                           onChange={(event) => updateItem(index, { image: event.target.value })}
                           className="mt-2 w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm outline-none transition focus:border-stone-500"
-                          placeholder="https://your-image-url.com/sample-work.jpg"
+                          placeholder="Paste image URL"
                         />
                       </Field>
 

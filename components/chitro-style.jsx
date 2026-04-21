@@ -1075,7 +1075,7 @@ function Header({ pathname, navigate }) {
       <header className="sticky top-0 z-40 border-b border-white/10 bg-black/95 backdrop-blur-xl">
         <div className="flex w-full items-center justify-between px-3 py-4 sm:px-4 md:px-6">
           <button onClick={() => navigate('/')} className="text-left">
-            <p className="min-h-[1.75rem] text-xl font-semibold tracking-[0.3em] uppercase text-white">
+            <p className="header-brand-spotlight min-h-[1.75rem] text-xl font-semibold tracking-[0.3em] uppercase">
               {siteContentReady ? siteIdentity.brand : ''}
             </p>
             <p className="min-h-[1rem] text-xs text-white/65">{siteContentReady ? siteIdentity.tagline : ''}</p>
@@ -1369,7 +1369,9 @@ function HomePage({ navigate }) {
           ) : (
             <div className="mx-auto h-16 w-16 rounded-[1.25rem] bg-stone-200 md:h-20 md:w-20" />
           )}
-          <h2 className="mt-8 min-h-[3rem] text-4xl font-semibold text-stone-950 md:min-h-[3.75rem] md:text-5xl">
+          <h2
+            className="brand-shimmer-text mt-8 min-h-[3rem] bg-[linear-gradient(90deg,#111827_0%,#374151_38%,#d1d5db_50%,#374151_62%,#111827_100%)] bg-[length:260%_100%] bg-clip-text text-4xl font-semibold text-transparent drop-shadow-[0_8px_20px_rgba(17,24,39,0.22)] md:min-h-[3.75rem] md:text-5xl"
+          >
             {siteContentReady ? siteIdentity.brand : ''}
           </h2>
           <p className="mx-auto mt-6 min-h-[6rem] max-w-3xl text-base leading-8 text-stone-700 md:min-h-[8rem] md:text-lg">

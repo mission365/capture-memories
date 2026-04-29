@@ -1519,20 +1519,21 @@ function HomePage({ navigate }) {
                   key={album.slug || album.title}
                   type="button"
                   onClick={() => navigate(`/sample-works/${album.slug}`)}
-                  className="group text-center"
+                  className="featured-album-card group text-center"
                 >
-                  <div className="overflow-hidden bg-stone-100 shadow-sm">
+                  <div className="relative overflow-hidden rounded-[1.75rem] border border-stone-200 bg-stone-50 shadow-sm transition duration-300 group-hover:-translate-y-1 group-hover:shadow-xl">
                     {album.image ? (
                       <SafeImage
                         src={album.image}
                         alt={album.title}
                         loading="lazy"
-                        className="aspect-[4/3] w-full object-cover transition duration-500 group-hover:scale-105"
+                        className="aspect-[4/3] w-full object-cover transition duration-700 group-hover:scale-105"
                       />
                     ) : (
                       <div className="aspect-[4/3] w-full bg-stone-200" />
                     )}
-                  </div>                  <p className="mt-4 text-base text-blue-700 transition group-hover:text-blue-900 md:text-lg">
+                  </div>
+                  <p className="mt-5 text-base font-medium text-stone-900 transition group-hover:text-stone-950 md:text-lg">
                     {album.title}
                   </p>
                 </button>
@@ -1542,8 +1543,8 @@ function HomePage({ navigate }) {
             <div className="mt-14 grid gap-x-6 gap-y-12 md:grid-cols-2">
               {[0, 1, 2, 3].map((item) => (
                 <div key={item} className="text-center">
-                  <div className="aspect-[4/3] w-full bg-stone-200 shadow-sm" />
-                  <div className="mx-auto mt-4 h-6 w-40 rounded-full bg-stone-200" />
+                  <div className="aspect-[4/3] w-full rounded-[1.75rem] border border-stone-200 bg-stone-100 shadow-sm" />
+                  <div className="mx-auto mt-5 h-6 w-40 rounded-full bg-stone-200" />
                 </div>
               ))}
             </div>
@@ -2320,6 +2321,20 @@ function PackagesPage({ navigate }) {
     }
   };
 
+  const getShowcaseImage = (item) => {
+    const image = typeof item?.image === 'string' ? item.image.trim() : '';
+    if (image) return image;
+
+    switch (item?.link) {
+      case '/packages/sonaton':
+        return 'https://images.unsplash.com/photo-1523437237164-d442d57cc3c9?auto=format&fit=crop&w=1400&q=80';
+      case '/packages/muslim':
+        return 'https://images.unsplash.com/photo-1529636798458-92182e662485?auto=format&fit=crop&w=1400&q=80';
+      default:
+        return '';
+    }
+  };
+
   return (
     <>
       <section className="bg-white px-6 py-20 md:py-24">
@@ -2340,29 +2355,27 @@ function PackagesPage({ navigate }) {
                 key={item.link}
                 type="button"
                 onClick={() => navigate(item.link)}
-                className="group relative min-h-[300px] overflow-hidden bg-stone-100 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
+                className="package-showcase-card group text-center"
               >
-                {item.image ? (
-                  <>
-                    <SafeImage
-                      src={item.image}
-                      alt={getShowcaseName(item)}
-                      className="absolute inset-0 z-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                    <div className="absolute inset-0 z-10 bg-black/35 transition group-hover:bg-black/30" />
-                  </>
-                ) : (
-                  <div className="absolute inset-0 bg-stone-200" />
-                )}
-                {item.image && (
-                  <div className="relative z-20 flex h-full items-end p-6 sm:p-7">
-                    <div className="max-w-full rounded-full bg-black/55 px-5 py-2.5 text-center font-serif text-2xl font-semibold leading-tight text-white shadow-sm backdrop-blur-sm drop-shadow-[0_14px_26px_rgba(0,0,0,0.35)] md:text-3xl">
-                      {getShowcaseName(item)}
+                <div className="relative min-h-[240px] overflow-hidden rounded-[1.75rem] border border-stone-200 bg-stone-50 shadow-sm transition duration-300 group-hover:-translate-y-1 group-hover:shadow-xl sm:min-h-[280px]">
+                  {getShowcaseImage(item) ? (
+                    <div className="absolute inset-0">
+                      <SafeImage
+                        src={getShowcaseImage(item)}
+                        alt={getShowcaseName(item)}
+                        className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                        loading="lazy"
+                        decoding="async"
+                      />
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <div className="absolute inset-0 bg-stone-200" />
+                  )}
+                </div>
+
+                <p className="mt-5 text-base font-medium text-stone-900 transition group-hover:text-stone-950 md:text-lg">
+                  {getShowcaseName(item)}
+                </p>
               </button>
             ))}
           </div>

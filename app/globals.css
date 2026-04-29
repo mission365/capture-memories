@@ -220,6 +220,20 @@
     z-index: -1;
   }
 
+  .chitro-site .featured-album-card::before {
+    opacity: 0 !important;
+  }
+
+  .chitro-site .package-showcase-card::before {
+    opacity: 0 !important;
+  }
+
+  .chitro-site .package-showcase-card:not(:disabled):not([aria-disabled='true']):hover,
+  .chitro-site .package-showcase-card:not(:disabled):not([aria-disabled='true']):focus-visible {
+    filter: none !important;
+    transform: none !important;
+  }
+
   .chitro-site :is(button, [data-slot='button'])[class*='bg-'] {
     box-shadow:
       0 10px 24px rgba(17, 24, 39, 0.12),

@@ -715,7 +715,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
 
       if (selectedFile) {
         const upload = await uploadHeroSlideImage(selectedFile, session.access_token);
-        imageUrl = upload.publicUrl;
+        imageUrl = upload.signedUrl || upload.publicUrl;
       }
 
       if (!imageUrl) {
@@ -985,7 +985,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
             updateUploadProgress(`Uploading office image... ${percent}%`, percent);
           },
         });
-        officeTourImageUrl = upload.publicUrl;
+        officeTourImageUrl = upload.signedUrl || upload.publicUrl;
         completedUploads += 1;
       }
 
@@ -1026,7 +1026,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
               );
             },
           });
-          imageUrl = upload.publicUrl;
+          imageUrl = upload.signedUrl || upload.publicUrl;
           completedUploads += 1;
         }
 
@@ -1161,7 +1161,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
             updateUploadProgress(`Uploading cover image... ${percent}%`, percent);
           },
         });
-        imageUrl = upload.publicUrl;
+        imageUrl = upload.signedUrl || upload.publicUrl;
         completedUploads += 1;
       }
 
@@ -1192,7 +1192,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
               );
             },
           });
-          galleryImageUrl = upload.publicUrl;
+          galleryImageUrl = upload.signedUrl || upload.publicUrl;
           completedUploads += 1;
         }
 
@@ -1371,7 +1371,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
 
       if (siteIdentityLogoFile instanceof File) {
         const upload = await uploadStorageImage(siteIdentityLogoFile, session.access_token, 'site-identity');
-        logoUrl = upload.publicUrl;
+        logoUrl = upload.signedUrl || upload.publicUrl;
       }
 
       const payload = {
@@ -1492,7 +1492,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
               );
             },
           });
-          imageUrl = upload.publicUrl;
+          imageUrl = upload.signedUrl || upload.publicUrl;
           completedUploads += 1;
         }
 
@@ -1538,7 +1538,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
 
           if (card?.file instanceof File) {
             const upload = await uploadStorageImage(card.file, session.access_token, 'package-showcase');
-            imageUrl = upload.publicUrl;
+            imageUrl = upload.signedUrl || upload.publicUrl;
           }
 
           return {

@@ -75,14 +75,22 @@ export async function serverSupabaseRequest(path: string, options: SupabaseReque
     throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL environment variable.')
   }
 
-  const response = await fetch(`${url}${path}`, {
-    method: options.method || 'GET',
-    headers: createServerSupabaseHeaders(options),
-    body: options.body,
-    cache: 'no-store',
-  })
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000)
 
-  return readSupabaseServerResponse(response)
+  try {
+    const response = await fetch(`${url}${path}`, {
+      method: options.method || 'GET',
+      headers: createServerSupabaseHeaders(options),
+      body: options.body,
+      cache: 'no-store',
+      signal: controller.signal,
+    })
+
+    return await readSupabaseServerResponse(response)
+  } finally {
+    clearTimeout(timeoutId)
+  }
 }
 
 export async function serverSupabaseFetch(path: string, options: SupabaseRequestOptions = {}) {

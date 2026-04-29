@@ -2,9 +2,7 @@
 
 import dynamic from 'next/dynamic';
 
-const ChitroStyle = dynamic(() => import('@/components/chitro-style'), {
-  ssr: false,
-});
+const ChitroStyle = dynamic(() => import('@/components/chitro-style'));
 
 export default function ChitroShell() {
   return <ChitroStyle />;

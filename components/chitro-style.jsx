@@ -23,20 +23,50 @@ import {
   Youtube,
 } from 'lucide-react';
 import { createContext, useContext, useEffect, useState } from 'react';
+import { usePathname as useNextPathname, useRouter } from 'next/navigation';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Spinner } from '@/components/ui/spinner';
+
+function SafeImage({ src, alt, className, ...props }) {
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    setIsLoaded(false);
+  }, [src]);
+
+  return (
+    <div className={`relative ${className}`}>
+      {!isLoaded && (
+        <div className="absolute inset-0 flex items-center justify-center bg-stone-50">
+          <Skeleton className="h-full w-full" />
+          <Spinner className="absolute size-10 text-[#FF4B4B]" />
+        </div>
+      )}
+      <img
+        src={src}
+        alt={alt}
+        onLoad={() => setIsLoaded(true)}
+        onError={() => setIsLoaded(true)}
+        className={`${className} ${isLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-500`}
+        {...props}
+      />
+    </div>
+  );
+}
 
 const PACKAGE_FALLBACK_ICONS = [Camera, Video, Gift, Sparkles, MessageSquare];
 
 const site = {
-  brand: 'ChitroStyle',
-  tagline: 'Wedding Photography Studio',
+  brand: '',
+  tagline: '',
   logoUrl: '',
-  email: 'hello@chitrostyle.com',
-  phone: '+880 1XXX-XXXXXX',
-  location: 'Dhaka, Bangladesh',
-  facebookUrl: 'https://facebook.com',
-  instagramUrl: 'https://instagram.com',
-  youtubeUrl: 'https://youtube.com',
-  twitterUrl: 'https://twitter.com',
+  email: '',
+  phone: '',
+  location: '',
+  facebookUrl: '',
+  instagramUrl: '',
+  youtubeUrl: '',
+  twitterUrl: '',
 };
 
 const navItems = [
@@ -192,9 +222,8 @@ const officeInfo = {
 
 const officeTour = {
   image: '',
-  title: 'Life at Capture Memories',
-  subtitle:
-    'The team also includes skilled editors who work behind the scenes to enhance the images, create the story, and produce a final product that exceeds your expectations.',
+  title: '',
+  subtitle: '',
   videoUrl: '',
 };
 
@@ -1022,24 +1051,14 @@ function mergeSiteContent(sectionRows = []) {
 }
 
 function usePathname() {
-  const getPath = () => {
-    if (typeof window === 'undefined') return '/';
-    return window.location.pathname || '/';
-  };
-
-  const [pathname, setPathname] = useState(getPath);
-
-  useEffect(() => {
-    const onPopState = () => setPathname(getPath());
-    window.addEventListener('popstate', onPopState);
-    return () => window.removeEventListener('popstate', onPopState);
-  }, []);
+  const pathname = useNextPathname();
+  const router = useRouter();
 
   const navigate = (path) => {
-    if (typeof window === 'undefined') return;
-    window.history.pushState({}, '', path);
-    setPathname(path);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    router.push(path);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   return { pathname, navigate };
@@ -1061,9 +1080,24 @@ function Header({ pathname, navigate }) {
   const siteIdentity = normalizeSiteIdentity(site);
   const visibleNavItems = getVisibleNavItems(navItems);
   const headerSocialLinks = [
-    { href: siteIdentity.facebookUrl, label: 'Facebook', icon: Facebook },
-    { href: siteIdentity.instagramUrl, label: 'Instagram', icon: Instagram },
-    { href: siteIdentity.youtubeUrl, label: 'YouTube', icon: Youtube },
+    {
+      href: siteIdentity.facebookUrl,
+      label: 'Facebook',
+      icon: Facebook,
+      colorClassName: 'text-[#1877F2] border-[#1877F2]/35 bg-[#1877F2]/10 hover:bg-[#1877F2] hover:text-white',
+    },
+    {
+      href: siteIdentity.instagramUrl,
+      label: 'Instagram',
+      icon: Instagram,
+      colorClassName: 'text-[#E1306C] border-[#E1306C]/35 bg-[#E1306C]/10 hover:bg-[#E1306C] hover:text-white',
+    },
+    {
+      href: siteIdentity.youtubeUrl,
+      label: 'YouTube',
+      icon: Youtube,
+      colorClassName: 'text-[#FF0000] border-[#FF0000]/35 bg-[#FF0000]/10 hover:bg-[#FF0000] hover:text-white',
+    },
   ].filter((item) => Boolean(item.href));
 
   useEffect(() => {
@@ -1074,12 +1108,17 @@ function Header({ pathname, navigate }) {
     <>
       <header className="sticky top-0 z-40 border-b border-white/10 bg-black/95 backdrop-blur-xl">
         <div className="flex w-full items-center justify-between px-3 py-4 sm:px-4 md:px-6">
-          <button onClick={() => navigate('/')} className="text-left">
-            <p className="header-brand-spotlight min-h-[1.75rem] text-xl font-semibold tracking-[0.3em] uppercase">
-              {siteContentReady ? siteIdentity.brand : ''}
-            </p>
-            <p className="min-h-[1rem] text-xs text-white/65">{siteContentReady ? siteIdentity.tagline : ''}</p>
-          </button>
+          <div
+            onClick={() => navigate('/')}
+            className="cursor-pointer text-left"
+          >
+            <div className="header-brand-spotlight min-h-[1.75rem] text-xl font-semibold tracking-[0.3em] uppercase">
+              {siteContentReady ? siteIdentity.brand : <Skeleton className="h-6 w-32 bg-stone-800" />}
+            </div>
+            <div className="min-h-[1rem] text-xs text-white/65">
+              {siteContentReady ? siteIdentity.tagline : <Skeleton className="mt-1 h-3 w-48 bg-stone-800" />}
+            </div>
+          </div>
 
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-3">
@@ -1093,7 +1132,7 @@ function Header({ pathname, navigate }) {
                     target="_blank"
                     rel="noreferrer"
                     aria-label={item.label}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 text-white/80 transition hover:border-white/40 hover:text-white"
+                    className={`inline-flex h-9 w-9 items-center justify-center rounded-full border transition duration-300 hover:-translate-y-0.5 ${item.colorClassName}`}
                   >
                     <Icon className="h-4 w-4" />
                   </a>
@@ -1142,7 +1181,7 @@ function Header({ pathname, navigate }) {
               <button
                 key={item.name}
                 onClick={() => navigate(item.link)}
-                className={`px-4 py-3 rounded-lg text-left text-sm font-medium transition ${isPathActive(pathname, item.link)
+                className={`menu-inner-hover px-4 py-3 rounded-lg text-left text-sm font-medium transition ${isPathActive(pathname, item.link)
                     ? 'bg-gray-100 text-gray-900'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
@@ -1175,46 +1214,128 @@ function Footer({ navigate }) {
   const siteIdentity = normalizeSiteIdentity(site);
   const visibleNavItems = getVisibleNavItems(navItems);
   const footerSocialLinks = [
-    { href: siteIdentity.facebookUrl, label: 'Facebook', icon: Facebook },
-    { href: siteIdentity.instagramUrl, label: 'Instagram', icon: Instagram },
-    { href: siteIdentity.youtubeUrl, label: 'YouTube', icon: Youtube },
+    {
+      href: siteIdentity.facebookUrl,
+      label: 'Facebook',
+      icon: Facebook,
+      colorClassName: 'text-[#1877F2] hover:scale-110',
+    },
+    {
+      href: siteIdentity.instagramUrl,
+      label: 'Instagram',
+      icon: Instagram,
+      colorClassName: 'text-[#E1306C] hover:scale-110',
+    },
+    {
+      href: siteIdentity.youtubeUrl,
+      label: 'YouTube',
+      icon: Youtube,
+      colorClassName: 'text-[#FF0000] hover:scale-110',
+    },
   ].filter((item) => Boolean(item.href));
 
+  const currentYear = new Date().getFullYear();
+
   return (
-    <footer className="mt-12 border-t border-stone-200 bg-white">
-      <div className="mx-auto flex max-w-5xl flex-col items-center gap-6 px-6 py-12 text-center">
-        <div className="flex items-center gap-3 text-stone-500">
-          {footerSocialLinks.map((item) => {
-            const Icon = item.icon;
+    <footer className="mt-20 border-t border-white/5 bg-black pt-16 pb-8 md:pt-24">
+      <div className="mx-auto max-w-7xl px-6 md:px-10">
+        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+          {/* Column 1: Brand & Tagline */}
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-2xl font-semibold tracking-wider text-white uppercase">
+                {siteIdentity.brand || 'ChitroStyle'}
+              </h3>
+              <p className="mt-3 text-sm leading-6 text-stone-400">
+                {siteIdentity.tagline || 'Capturing your precious moments with love and authenticity.'}
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              {footerSocialLinks.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <a
+                    key={item.label}
+                    href={item.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={item.label}
+                    className={`inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 transition-all duration-300 menu-inner-hover ${item.colorClassName}`}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </a>
+                );
+              })}
+            </div>
+          </div>
 
-            return (
-              <a
-                key={item.label}
-                href={item.href}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={item.label}
-                className="transition hover:text-stone-900"
-              >
-                <Icon className="h-4 w-4" />
+          {/* Column 2: Navigation */}
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-white/50">Quick Links</h4>
+            <nav className="mt-6 flex flex-col gap-4">
+              {visibleNavItems.map((item) => (
+                <button
+                  key={item.name}
+                  onClick={() => navigate(item.link)}
+                  className="w-fit text-sm text-stone-400 transition hover:text-white hover:translate-x-1 duration-200"
+                >
+                  {item.name}
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          {/* Column 3: Contact */}
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-white/50">Contact Us</h4>
+            <div className="mt-6 space-y-4">
+              <div className="flex items-start gap-3">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-stone-500" />
+                <p className="text-sm leading-6 text-stone-400">
+                  {siteIdentity.location || 'Dhaka, Bangladesh'}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <Phone className="h-4 w-4 shrink-0 text-stone-500" />
+                <a href={`tel:${siteIdentity.phone}`} className="text-sm text-stone-400 hover:text-white transition">
+                  {siteIdentity.phone || '+880 1XXX-XXXXXX'}
+                </a>
+              </div>
+              <div className="flex items-center gap-3">
+                <Mail className="h-4 w-4 shrink-0 text-stone-500" />
+                <a href={`mailto:${siteIdentity.email}`} className="text-sm text-stone-600 hover:text-white transition">
+                  {siteIdentity.email || 'hello@chitrostyle.com'}
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Column 4: Newsletter or Info */}
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-white/50">Office Hours</h4>
+            <div className="mt-6 space-y-3">
+              <p className="text-sm text-stone-400">Saturday — Thursday</p>
+              <p className="text-sm font-medium text-white">11:00 AM — 08:00 PM</p>
+              <p className="mt-4 text-xs italic text-stone-600">
+                Please book an appointment before visiting.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Section */}
+        <div className="mt-16 border-t border-white/10 pt-8">
+          <div className="flex flex-col items-center justify-between gap-6 text-center md:flex-row md:text-left">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-stone-500">
+              © {currentYear} {siteIdentity.brand || 'ChitroStyle'} Inc. All rights reserved.
+            </p>
+            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-stone-500">
+              <span>Made with love by</span>
+              <a href="https://clockosoft.com" target="_blank" rel="noreferrer" className="font-semibold text-stone-300 hover:text-white transition">
+                Clockosoft
               </a>
-            );
-          })}
-        </div>
-
-        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-stone-600">
-          {visibleNavItems.map((item) => (
-            <button key={item.name} onClick={() => navigate(item.link)} className="transition hover:text-stone-900">
-              {item.name}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="bg-black px-8 py-5 md:px-10">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-center gap-2 text-center text-[11px] uppercase tracking-[0.2em] text-white/70 md:flex-row md:gap-10">
-          <p>Copyright 2026 {siteIdentity.brand} Inc.</p>
-          <p>Made with love by Clockosoft</p>
+            </div>
+          </div>
         </div>
       </div>
     </footer>
@@ -1319,10 +1440,13 @@ function HomePage({ navigate }) {
                 className={`absolute inset-0 transition-opacity duration-700 ${active === idx ? 'opacity-100' : 'pointer-events-none opacity-0'
                   }`}
               >
-                <img
+                <SafeImage
                   src={item.image}
                   alt={item.title || `Hero slide ${idx + 1}`}
                   className="h-full min-h-[88svh] w-full object-cover md:min-h-[92vh]"
+                  loading={idx === 0 ? 'eager' : 'lazy'}
+                  fetchPriority={idx === 0 ? 'high' : 'auto'}
+                  decoding="async"
                 />
               </div>
             ))}
@@ -1365,18 +1489,26 @@ function HomePage({ navigate }) {
       <section className="bg-white px-6 py-20 md:py-24">
         <div className="mx-auto max-w-5xl text-center">
           {siteContentReady && siteIdentity.logoUrl ? (
-            <img src={siteIdentity.logoUrl} alt={`${siteIdentity.brand} logo`} className="mx-auto h-16 w-16 md:h-20 md:w-20" />
+            <SafeImage src={siteIdentity.logoUrl} alt={`${siteIdentity.brand} logo`} className="mx-auto h-16 w-16 md:h-20 md:w-20" />
           ) : (
             <div className="mx-auto h-16 w-16 rounded-[1.25rem] bg-stone-200 md:h-20 md:w-20" />
           )}
-          <h2
-            className="brand-shimmer-text mt-8 min-h-[3rem] bg-[linear-gradient(90deg,#111827_0%,#374151_38%,#d1d5db_50%,#374151_62%,#111827_100%)] bg-[length:260%_100%] bg-clip-text text-4xl font-semibold text-transparent drop-shadow-[0_8px_20px_rgba(17,24,39,0.22)] md:min-h-[3.75rem] md:text-5xl"
+          <div
+            className="mt-8 min-h-[3rem] text-4xl font-semibold text-stone-950 md:min-h-[3.75rem] md:text-5xl"
           >
-            {siteContentReady ? siteIdentity.brand : ''}
-          </h2>
-          <p className="mx-auto mt-6 min-h-[6rem] max-w-3xl text-base leading-8 text-stone-700 md:min-h-[8rem] md:text-lg">
-            {siteContentReady ? homeIntro : ''}
-          </p>
+            {siteContentReady ? siteIdentity.brand : <Skeleton className="mx-auto h-12 w-64 bg-stone-100" />}
+          </div>
+          <div className="mx-auto mt-6 min-h-[6rem] max-w-3xl text-base leading-8 text-stone-700 md:min-h-[8rem] md:text-lg">
+            {siteContentReady ? (
+              homeIntro
+            ) : (
+              <div className="space-y-3">
+                <Skeleton className="mx-auto h-4 w-full bg-stone-100" />
+                <Skeleton className="mx-auto h-4 w-[90%] bg-stone-100" />
+                <Skeleton className="mx-auto h-4 w-[95%] bg-stone-100" />
+              </div>
+            )}
+          </div>
 
           <h3 className="mt-14 font-serif text-3xl italic text-stone-900 md:text-4xl">Featured Albums</h3>
 
@@ -1391,7 +1523,7 @@ function HomePage({ navigate }) {
                 >
                   <div className="overflow-hidden bg-stone-100 shadow-sm">
                     {album.image ? (
-                      <img
+                      <SafeImage
                         src={album.image}
                         alt={album.title}
                         loading="lazy"
@@ -1400,8 +1532,7 @@ function HomePage({ navigate }) {
                     ) : (
                       <div className="aspect-[4/3] w-full bg-stone-200" />
                     )}
-                  </div>
-                  <p className="mt-4 text-base text-blue-700 transition group-hover:text-blue-900 md:text-lg">
+                  </div>                  <p className="mt-4 text-base text-blue-700 transition group-hover:text-blue-900 md:text-lg">
                     {album.title}
                   </p>
                 </button>
@@ -1490,10 +1621,9 @@ function AboutPage({ navigate }) {
                 <article key={member.name} className="flex flex-col items-center text-center">
                   <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-stone-100 shadow-sm md:h-32 md:w-32">
                     {member.image ? (
-                      <img
+                      <SafeImage
                         src={member.image}
                         alt={member.name}
-                        loading="lazy"
                         className="h-full w-full object-cover grayscale"
                       />
                     ) : (
@@ -1556,10 +1686,9 @@ function AboutPage({ navigate }) {
           ) : officeMedia.image ? (
             <div className="mx-auto mt-10 max-w-3xl overflow-hidden rounded-[2rem] border border-stone-200 bg-stone-100 shadow-sm">
               <div className="relative aspect-video overflow-hidden">
-                <img
+                <SafeImage
                   src={officeMedia.image}
                   alt="Office tour preview"
-                  loading="lazy"
                   className="h-full w-full object-cover"
                 />
               </div>
@@ -1838,10 +1967,13 @@ function PackageInfoCard({ item, onOpenDetails }) {
           <div className="absolute -left-10 bottom-0 h-24 w-24 rounded-full bg-slate-200/20 blur-2xl" />
 
           <div className="relative">
-            <h3 className="mx-auto mt-3 max-w-xs text-xl font-semibold uppercase leading-tight text-white md:text-2xl">
+            <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-white md:text-[11px]">
+              Package Name
+            </p>
+            <h3 className="mx-auto mt-2 max-w-xs text-xl font-semibold uppercase leading-tight text-white md:text-2xl">
               {item.title}
             </h3>
-            {item.subtitle && <p className="mt-2 text-sm leading-6 text-[#ffd7c1]">{item.subtitle}</p>}
+            {item.subtitle && <p className="mt-2 text-sm leading-6 text-white/90">{item.subtitle}</p>}
           </div>
         </div>
 
@@ -2172,6 +2304,21 @@ function PackagesPageLegacy({ navigate }) {
 
 function PackagesPage({ navigate }) {
   const { packageShowcase } = useSiteContent();
+  const getShowcaseName = (item) => {
+    const name = typeof item?.name === 'string' ? item.name.trim() : '';
+    if (name) {
+      return name;
+    }
+
+    switch (item?.link) {
+      case '/packages/sonaton':
+        return 'Sonaton Package';
+      case '/packages/muslim':
+        return 'Muslim Package';
+      default:
+        return 'Packages';
+    }
+  };
 
   return (
     <>
@@ -2190,29 +2337,32 @@ function PackagesPage({ navigate }) {
           <div className="mx-auto mt-14 grid max-w-4xl gap-6 sm:grid-cols-2">
             {packageShowcase.map((item) => (
               <button
-                key={item.name}
+                key={item.link}
                 type="button"
                 onClick={() => navigate(item.link)}
                 className="group relative min-h-[300px] overflow-hidden bg-stone-100 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl"
               >
                 {item.image ? (
                   <>
-                    <img
+                    <SafeImage
                       src={item.image}
-                      alt={item.name}
+                      alt={getShowcaseName(item)}
+                      className="absolute inset-0 z-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
                       loading="lazy"
-                      className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                      decoding="async"
                     />
-                    <div className="absolute inset-0 bg-black/35 transition group-hover:bg-black/30" />
+                    <div className="absolute inset-0 z-10 bg-black/35 transition group-hover:bg-black/30" />
                   </>
                 ) : (
                   <div className="absolute inset-0 bg-stone-200" />
                 )}
-                <div className="relative flex h-full items-center justify-center p-8">
-                  <h2 className={`font-serif text-4xl md:text-[2.7rem] ${item.image ? 'text-white' : 'text-stone-950'}`}>
-                    {item.name}
-                  </h2>
-                </div>
+                {item.image && (
+                  <div className="relative z-20 flex h-full items-end p-6 sm:p-7">
+                    <div className="max-w-full rounded-full bg-black/55 px-5 py-2.5 text-center font-serif text-2xl font-semibold leading-tight text-white shadow-sm backdrop-blur-sm drop-shadow-[0_14px_26px_rgba(0,0,0,0.35)] md:text-3xl">
+                      {getShowcaseName(item)}
+                    </div>
+                  </div>
+                )}
               </button>
             ))}
           </div>
@@ -2241,10 +2391,9 @@ function AddOnsPage() {
               <article key={item.name} className="flex flex-col items-center text-center">
                 <div className="group relative w-full max-w-[220px] overflow-hidden rounded-[1.75rem] border border-stone-200 bg-stone-50 shadow-sm">
                   {item.image ? (
-                    <img
+                    <SafeImage
                       src={item.image}
                       alt={item.name}
-                      loading="lazy"
                       className="h-36 w-full object-cover transition duration-700 group-hover:scale-105"
                     />
                   ) : (
@@ -2291,10 +2440,9 @@ function AlbumStoryPage({ album, navigate }) {
             {galleryItems.map((item, index) => (
               <figure key={`${album.slug}-${index}`} className="space-y-5">
                 <div className="overflow-hidden bg-stone-100 shadow-sm">
-                  <img
+                  <SafeImage
                     src={item.image}
                     alt={item.caption || album.title}
-                    loading="lazy"
                     className="aspect-[16/10] w-full object-cover"
                   />
                 </div>
@@ -2342,13 +2490,7 @@ function SampleWorksPage() {
 
   return (
     <>
-      <PageHeader
-        eyebrow="Sample Works"
-        title="A curated collection of wedding stories, portraits, details, and cinematic moments."
-        text="Explore our visual style across different wedding events and couple stories. This gallery is designed to reflect elegance, emotion, and premium presentation."
-      />
-
-      <section className="mx-auto max-w-7xl px-6 pb-8 bg-white">
+      <section className="mx-auto max-w-7xl px-6 pb-8 pt-12 bg-white">
         <div className="flex flex-wrap gap-3">
           {filters.map((item) => (
             <button
@@ -2372,10 +2514,9 @@ function SampleWorksPage() {
             >
               <div className="h-80 overflow-hidden">
                 {work.image ? (
-                  <img
+                  <SafeImage
                     src={work.image}
                     alt={work.title}
-                    loading="lazy"
                     className="h-full w-full object-cover transition duration-500 group-hover:scale-110"
                   />
                 ) : (
@@ -2741,7 +2882,10 @@ export default function ChitrogolpoInspiredFullSite() {
 
   const page = (() => {
     const isFeaturedAlbumPath = pathname.startsWith('/sample-works/') && pathname !== '/sample-works';
-    const albumPage = siteContent.featuredAlbums.find((album) => pathname === `/sample-works/${album.slug}`);
+    const albumPage = siteContent.featuredAlbums.find((album) => {
+      const targetPath = `/sample-works/${album.slug}`;
+      return pathname === targetPath || decodeURIComponent(pathname) === targetPath;
+    });
 
     if (!siteContentReady && isFeaturedAlbumPath) {
       return (

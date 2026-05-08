@@ -2428,30 +2428,77 @@ function AddOnsPage() {
 function AlbumStoryPage({ album, navigate }) {
   const { albumStoryGalleries, site } = useSiteContent();
   const galleryItems = albumStoryGalleries[album.slug] ?? [];
+  const normalizeAlbumText = (value) =>
+    typeof value === 'string' ? value.trim().replace(/\s+/g, ' ').toLowerCase() : '';
+  const seenAlbumTexts = new Set(
+    [album.heroTitle, album.heroSubtitle].map((value) => normalizeAlbumText(value)).filter(Boolean)
+  );
+  const getUniqueAlbumText = (value) => {
+    const trimmedValue = typeof value === 'string' ? value.trim() : '';
+
+    if (!trimmedValue) {
+      return '';
+    }
+
+    const comparableValue = normalizeAlbumText(trimmedValue);
+
+    if (seenAlbumTexts.has(comparableValue)) {
+      return '';
+    }
+
+    seenAlbumTexts.add(comparableValue);
+    return trimmedValue;
+  };
+  const uniquePageCaption = getUniqueAlbumText(album.pageCaption);
+  const uniqueStory = getUniqueAlbumText(album.story);
+  const uniqueCredit = getUniqueAlbumText(album.credit);
+  const hasIntroContent = Boolean(uniquePageCaption || uniqueStory || uniqueCredit);
 
   return (
     <>
       <section className="bg-slate-800 px-6 py-20 md:py-28">
         <div className="mx-auto max-w-5xl text-center text-white">
           <h1 className="text-4xl font-semibold uppercase leading-[1.05] md:text-7xl">
-            <span className="block">{album.heroTitle}</span>
-            <span className="mt-3 block">{album.heroSubtitle}</span>
+            <span className="block text-[#E8D5B7]">{album.heroTitle}</span>
+            {album.heroSubtitle ? (
+              <span className="mt-4 block text-2xl text-[rgba(232,213,183,0.5)] md:text-4xl">
+                {album.heroSubtitle}
+              </span>
+            ) : null}
           </h1>
         </div>
       </section>
 
-      <section className="bg-white px-6 py-24 md:py-32">
-        <div className="mx-auto max-w-3xl text-center">
-          <p className="text-base leading-8 text-stone-800 md:text-lg">{album.story}</p>
-          <p className="mt-10 text-sm text-stone-600">{album.credit}</p>
-        </div>
-      </section>
+      {hasIntroContent ? (
+        <section className="bg-white px-6 py-24 md:py-32">
+          <div className="mx-auto max-w-4xl">
+            {uniquePageCaption ? (
+              <div className="mx-auto max-w-3xl rounded-[2rem] border border-stone-200 bg-[linear-gradient(135deg,rgba(250,245,239,0.92),rgba(255,255,255,1))] px-8 py-8 text-center shadow-[0_24px_60px_rgba(28,25,23,0.08)] md:px-12">
+                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-stone-500">Album Caption</p>
+                <p className="mt-4 font-serif text-2xl italic leading-relaxed text-stone-900 md:text-3xl whitespace-pre-line">
+                  {uniquePageCaption}
+                </p>
+              </div>
+            ) : null}
+
+            <div className={`mx-auto max-w-3xl text-center ${uniquePageCaption ? 'mt-14' : ''}`}>
+              {uniqueStory ? <p className="text-base leading-8 text-stone-800 md:text-lg">{uniqueStory}</p> : null}
+              {uniqueCredit ? (
+                <p className={`${uniqueStory ? 'mt-10 ' : ''}text-sm text-stone-600`}>{uniqueCredit}</p>
+              ) : null}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {galleryItems.length > 0 ? (
-        <section className="bg-white px-6 pb-24 md:pb-32">
+        <section className={`bg-white px-6 pb-24 md:pb-32 ${hasIntroContent ? '' : 'pt-10 md:pt-14'}`}>
           <div className="mx-auto max-w-5xl space-y-20">
             {galleryItems.map((item, index) => (
-              <figure key={`${album.slug}-${index}`} className="space-y-5">
+              <figure
+                key={`${album.slug}-${index}`}
+                className="overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-[0_28px_70px_rgba(28,25,23,0.08)]"
+              >
                 <div className="overflow-hidden bg-stone-100 shadow-sm">
                   <SafeImage
                     src={item.image}
@@ -2459,8 +2506,13 @@ function AlbumStoryPage({ album, navigate }) {
                     className="aspect-[16/10] w-full object-cover"
                   />
                 </div>
-                <figcaption className="text-sm leading-7 text-stone-700 md:text-base">
-                  {item.caption}
+                <figcaption className="border-t border-stone-200 bg-stone-50/80 px-5 py-5 md:px-6">
+                  <p className="text-[0.7rem] font-semibold uppercase tracking-[0.28em] text-stone-500">
+                    Frame {index + 1}
+                  </p>
+                  <p className="mt-3 text-sm leading-7 text-stone-700 md:text-base whitespace-pre-line">
+                    {item.caption}
+                  </p>
                 </figcaption>
               </figure>
             ))}

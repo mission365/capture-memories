@@ -48,6 +48,7 @@ function createEmptyFeaturedAlbumForm() {
     slug: '',
     heroTitle: '',
     heroSubtitle: '',
+    pageCaption: '',
     story: '',
     credit: '',
     imageUrl: '',
@@ -831,6 +832,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
       slug: '',
       heroTitle: '',
       heroSubtitle: '',
+      pageCaption: '',
       story: '',
       credit: '',
       imageUrl: '',
@@ -851,6 +853,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
       slug: album.slug || '',
       heroTitle: album.heroTitle || '',
       heroSubtitle: album.heroSubtitle || '',
+      pageCaption: album.pageCaption || album.caption || '',
       story: album.story || '',
       credit: album.credit || '',
       imageUrl: album.image || '',
@@ -1222,6 +1225,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
         slug,
         heroTitle: featuredAlbumForm.heroTitle.trim() || title,
         heroSubtitle: featuredAlbumForm.heroSubtitle.trim() || '',
+        pageCaption: featuredAlbumForm.pageCaption.trim() || '',
         story: featuredAlbumForm.story.trim() || '',
         credit: featuredAlbumForm.credit.trim() || '',
         image: imageUrl,
@@ -2015,7 +2019,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                       {editingFeaturedAlbumSlug ? 'Edit featured album' : 'Create featured album'}
                     </h2>
                     <p className="mt-2 text-sm leading-7 text-stone-600">
-                      Upload the album cover image, then manage title, slug, story, and cover from one place.
+                      Upload the album cover image, then manage the title, page caption, story, and gallery captions from one place.
                     </p>
                     <div className="mt-4 rounded-[1.25rem] border border-stone-200 bg-stone-50 px-4 py-3">
                       <p className="text-xs font-semibold uppercase tracking-[0.25em] text-stone-500">
@@ -2109,6 +2113,19 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                     />
                   </label>
                 </div>
+
+                <label className="mt-5 block text-sm font-medium text-stone-700">
+                  Page caption
+                  <textarea
+                    value={featuredAlbumForm.pageCaption}
+                    onChange={(event) => setFeaturedAlbumForm((current) => ({ ...current, pageCaption: event.target.value }))}
+                    className="mt-2 min-h-24 w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm outline-none transition focus:border-stone-500"
+                    placeholder="Write the elegant caption that will appear on the album detail page..."
+                  />
+                  <p className="mt-2 text-xs leading-6 text-stone-500">
+                    This stays dynamic and can be updated anytime from the admin panel.
+                  </p>
+                </label>
 
                 <label className="mt-5 block text-sm font-medium text-stone-700">
                   Story
@@ -2368,6 +2385,12 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                                   Order {index + 1}
                                 </div>
                               </div>
+
+                              {album.pageCaption && (
+                                <p className="mt-4 line-clamp-3 rounded-[1.25rem] border border-stone-200 bg-white px-4 py-3 text-sm italic leading-7 text-stone-700">
+                                  {album.pageCaption}
+                                </p>
+                              )}
 
                               <p className="mt-4 line-clamp-3 text-sm leading-7 text-stone-700">{album.story}</p>
 

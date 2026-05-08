@@ -2456,12 +2456,12 @@ function AlbumStoryPage({ album, navigate }) {
 
   return (
     <>
-      <section className="bg-slate-800 px-6 py-20 md:py-28">
+      <section className="bg-slate-800 px-6 py-8 md:py-10">
         <div className="mx-auto max-w-5xl text-center text-white">
-          <h1 className="text-4xl font-semibold uppercase leading-[1.05] md:text-7xl">
+          <h1 className="text-3xl font-semibold uppercase leading-[1.05] md:text-5xl">
             <span className="block text-[#E8D5B7]">{album.heroTitle}</span>
             {album.heroSubtitle ? (
-              <span className="mt-4 block text-2xl text-[rgba(232,213,183,0.5)] md:text-4xl">
+              <span className="mt-3 block whitespace-nowrap text-[clamp(0.65rem,2vw,1.875rem)] leading-none tracking-[-0.03em] text-[rgba(232,213,183,0.5)]">
                 {album.heroSubtitle}
               </span>
             ) : null}

@@ -1,5 +1,5 @@
 import HeroSliderAdmin from '@/components/hero-slider-admin';
-import { createWhatsAppLink, DEFAULT_BOOK_US_CONTENT, normalizeBookUsContent } from '@/lib/book-us-content';
+import { createWhatsAppLink, DEFAULT_BOOK_US_CONTENT, HARDCODED_CONTACT_NUMBER, normalizeBookUsContent } from '@/lib/book-us-content';
 import { normalizeAlbumStoryGalleries, normalizeFeaturedAlbums } from '@/lib/featured-albums';
 import { defaultHeroSlides, normalizeHeroSlides } from '@/lib/hero-slides';
 import { normalizePackageCards, normalizePackageDetailSections, normalizePackageShowcase } from '@/lib/package-content';
@@ -64,7 +64,7 @@ const site = {
   tagline: DEFAULT_TAGLINE,
   logoUrl: '',
   email: DEFAULT_EMAIL,
-  phone: '+8801312-030609',
+  phone: HARDCODED_CONTACT_NUMBER,
   location: 'Dhaka, Bangladesh',
   facebookUrl: '',
   instagramUrl: '',
@@ -210,7 +210,7 @@ const officeInfo = {
     '3B#2nd Floor, House#612, Road#8,',
     'Avenue#6, Mirpur DOHS, Dhaka-1216, Bangladesh',
   ],
-  phones: ['+8801711-996633', '+8801312-030609'],
+  phones: [HARDCODED_CONTACT_NUMBER],
   mapQuery: '3B#2nd Floor, House#612, Road#8, Avenue#6, Mirpur DOHS, Dhaka-1216, Bangladesh',
 };
 
@@ -231,7 +231,7 @@ function normalizeSiteIdentity(content = {}) {
     tagline: readText(content?.tagline) || site.tagline,
     logoUrl: readText(content?.logoUrl) || site.logoUrl,
     email: readText(content?.email) || site.email,
-    phone: readText(content?.phone) || site.phone,
+    phone: HARDCODED_CONTACT_NUMBER,
     location: readText(content?.location) || site.location,
     facebookUrl: readText(content?.facebookUrl) || site.facebookUrl,
     instagramUrl: readText(content?.instagramUrl) || site.instagramUrl,
@@ -279,7 +279,7 @@ function normalizeOfficeInfo(content = {}) {
 
   return {
     address: address.length > 0 ? address : officeInfo.address,
-    phones: phones.length > 0 ? phones : officeInfo.phones,
+    phones: phones.length > 0 ? [HARDCODED_CONTACT_NUMBER] : officeInfo.phones,
     mapQuery: readText(content?.mapQuery) || officeInfo.mapQuery,
   };
 }
@@ -1292,7 +1292,7 @@ function Footer({ navigate }) {
               <div className="flex items-center gap-3">
                 <Phone className="h-4 w-4 shrink-0 text-stone-500" />
                 <a href={`tel:${siteIdentity.phone}`} className="text-sm text-stone-400 hover:text-white transition">
-                  {siteIdentity.phone || '+880 1XXX-XXXXXX'}
+                  {siteIdentity.phone || HARDCODED_CONTACT_NUMBER}
                 </a>
               </div>
               <div className="flex items-center gap-3">

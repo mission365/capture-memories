@@ -32,6 +32,8 @@ import {
   uploadHeroSlideImage,
   uploadStorageImage,
 } from '@/lib/supabase-browser';
+import { createSiteSectionMap, getLatestSiteSectionRows } from '@/lib/site-sections';
+import { getUploadedStorageUrl, normalizeSupabaseStorageUrl } from '@/lib/storage-url';
 
 function createEmptyForm() {
   return {
@@ -165,16 +167,6 @@ function getMergedAboutPageContent(sectionMap = {}, defaultContent = {}) {
   };
 }
 
-function createSectionMap(items = []) {
-  return items.reduce((accumulator, item) => {
-    if (item?.section_key) {
-      accumulator[item.section_key] = item.content;
-    }
-
-    return accumulator;
-  }, {});
-}
-
 function readInputText(value) {
   return typeof value === 'string' ? value : '';
 }
@@ -188,7 +180,7 @@ function createEditableAboutMember(member = {}) {
     id: createAboutMemberEditorId(),
     name: readInputText(member?.name),
     role: readInputText(member?.role),
-    imageUrl: readInputText(member?.image),
+    imageUrl: normalizeSupabaseStorageUrl(readInputText(member?.image)),
     facebookUrl: readInputText(member?.facebookUrl),
     instagramUrl: readInputText(member?.instagramUrl),
     youtubeUrl: readInputText(member?.youtubeUrl),
@@ -225,7 +217,7 @@ function createAboutPageForm(content = {}) {
     officeTourTitle: readInputText(officeTour.title),
     officeTourSubtitle: readInputText(officeTour.subtitle),
     officeTourVideoUrl: readInputText(officeTour.videoUrl),
-    officeTourImageUrl: readInputText(officeTour.image),
+    officeTourImageUrl: normalizeSupabaseStorageUrl(readInputText(officeTour.image)),
   };
 }
 
@@ -252,7 +244,7 @@ function createSiteIdentityForm(content = {}) {
   return {
     brand: readInputText(content?.brand),
     tagline: readInputText(content?.tagline),
-    logoUrl: readInputText(content?.logoUrl),
+    logoUrl: normalizeSupabaseStorageUrl(readInputText(content?.logoUrl)),
     email: readInputText(content?.email),
     phone: readInputText(content?.phone),
     location: readInputText(content?.location),
@@ -271,6 +263,30 @@ function parseMultilineList(value) {
 
 function looksLikeYouTubeUrl(value) {
   return /(?:youtu\.be|youtube\.com|youtube-nocookie\.com)/i.test(String(value || '').trim());
+}
+
+function createHeroSlideSelector(slide = {}) {
+  return {
+    id: readInputText(slide?.id),
+    imageUrl: normalizeSupabaseStorageUrl(readInputText(slide?.image_url || slide?.image)),
+    createdAt: readInputText(slide?.created_at),
+    sortOrder: Number.isFinite(Number(slide?.sort_order)) ? Number(slide.sort_order) : null,
+    title: readInputText(slide?.title),
+  };
+}
+
+function createHeroSlideAdminKey(slide = {}, index = 0) {
+  const selector = createHeroSlideSelector(slide);
+
+  return (
+    selector.id ||
+    [
+      selector.createdAt || `row-${index + 1}`,
+      selector.imageUrl || 'no-image',
+      selector.sortOrder ?? index + 1,
+      index + 1,
+    ].join('::')
+  );
 }
 
 export default function HeroSliderAdmin({ navigate, defaultContent = {}, contentSections = [] }) {
@@ -320,6 +336,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
   const [bookUsForm, setBookUsForm] = useState(() => createBookUsForm(initialBookUsContent));
   const [activeAdminSection, setActiveAdminSection] = useState('slider');
   const [loggingOut, setLoggingOut] = useState(false);
+  const [editingSlideSelector, setEditingSlideSelector] = useState(null);
   const [selectedSectionKey, setSelectedSectionKey] = useState(contentSections[0]?.key || '');
   const [sectionEditor, setSectionEditor] = useState('');
   const [message, setMessage] = useState('');
@@ -327,7 +344,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
 
   const supabaseConfig = getSupabaseConfig();
   const configured = isSupabaseConfigured();
-  const sectionMap = createSectionMap(sectionItems);
+  const sectionMap = createSiteSectionMap(sectionItems);
   const mergedAboutPageContent = getMergedAboutPageContent(sectionMap, defaultContent);
   const selectedSectionDefinition =
     contentSections.find((section) => section.key === selectedSectionKey) || contentSections[0] || null;
@@ -571,7 +588,27 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
         includeInactive: true,
         accessToken,
       });
-      const nextSlides = Array.isArray(items) ? items : [];
+      const nextSlides = Array.isArray(items)
+        ? items.map((item, index) => {
+            const normalizedImageUrl = normalizeSupabaseStorageUrl(item?.image_url);
+
+            return {
+              ...item,
+              image_url: normalizedImageUrl,
+              _selector: createHeroSlideSelector({
+                ...item,
+                image_url: normalizedImageUrl,
+              }),
+              _adminKey: createHeroSlideAdminKey(
+                {
+                  ...item,
+                  image_url: normalizedImageUrl,
+                },
+                index
+              ),
+            };
+          })
+        : [];
       setSlides(nextSlides);
       return nextSlides;
     } catch (loadError) {
@@ -588,9 +625,9 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
 
     try {
       const items = await listSiteSections({ accessToken });
-      const nextItems = Array.isArray(items) ? items : [];
+      const nextItems = getLatestSiteSectionRows(items);
       setSectionItems(nextItems);
-      resetAboutPageEditor(getMergedAboutPageContent(createSectionMap(nextItems), defaultContent));
+      resetAboutPageEditor(getMergedAboutPageContent(createSiteSectionMap(nextItems), defaultContent));
       return nextItems;
     } catch (loadError) {
       setError(loadError.message || 'Content sections could not be loaded.');
@@ -654,6 +691,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
       setSectionItems([]);
       setHasLoadedSections(false);
       setEditingId(null);
+      setEditingSlideSelector(null);
       setSelectedFile(null);
       setForm(createEmptyForm());
       setEditingFeaturedAlbumSlug(null);
@@ -673,6 +711,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
 
   function resetForm(nextCount = slides.length) {
     setEditingId(null);
+    setEditingSlideSelector(null);
     setSelectedFile(null);
     setForm({
       title: '',
@@ -683,13 +722,14 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
   }
 
   function startEditing(slide) {
-    setEditingId(slide.id);
+    setEditingId(slide._adminKey || createHeroSlideAdminKey(slide));
+    setEditingSlideSelector(slide._selector || createHeroSlideSelector(slide));
     setSelectedFile(null);
     setMessage('');
     setError('');
     setForm({
       title: slide.title || '',
-      imageUrl: slide.image_url || '',
+      imageUrl: normalizeSupabaseStorageUrl(slide.image_url || ''),
       sortOrder: String(slide.sort_order ?? 1),
       isActive: slide.is_active ?? true,
     });
@@ -712,11 +752,11 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
     setError('');
 
     try {
-      let imageUrl = form.imageUrl.trim();
+      let imageUrl = normalizeSupabaseStorageUrl(form.imageUrl.trim());
 
       if (selectedFile) {
         const upload = await uploadHeroSlideImage(selectedFile, session.access_token);
-        imageUrl = upload.signedUrl || upload.publicUrl;
+        imageUrl = getUploadedStorageUrl(upload);
       }
 
       if (!imageUrl) {
@@ -730,8 +770,8 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
         is_active: form.isActive,
       };
 
-      if (editingId) {
-        await updateHeroSlide(editingId, payload, session.access_token);
+      if (editingSlideSelector) {
+        await updateHeroSlide(editingSlideSelector, payload, session.access_token);
         setMessage('Slide updated successfully.');
       } else {
         await createHeroSlide(payload, session.access_token);
@@ -747,7 +787,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
     }
   }
 
-  async function handleDeleteSlide(slideId) {
+  async function handleDeleteSlide(slide) {
     if (!session?.access_token) return;
 
     const shouldDelete =
@@ -760,10 +800,11 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
     setError('');
 
     try {
-      await deleteHeroSlide(slideId, session.access_token);
+      const selector = slide?._selector || createHeroSlideSelector(slide);
+      await deleteHeroSlide(selector, session.access_token);
       const nextSlides = await loadSlides(session.access_token);
 
-      if (editingId === slideId) {
+      if (editingId === (slide?._adminKey || createHeroSlideAdminKey(slide))) {
         resetForm(nextSlides.length);
       }
 
@@ -980,7 +1021,9 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
       const inferredOfficeTourVideoUrl =
         rawOfficeTourVideoUrl || (looksLikeYouTubeUrl(rawOfficeTourImageUrl) ? rawOfficeTourImageUrl : '');
       let officeTourImageUrl =
-        looksLikeYouTubeUrl(rawOfficeTourImageUrl) && !rawOfficeTourVideoUrl ? '' : rawOfficeTourImageUrl;
+        looksLikeYouTubeUrl(rawOfficeTourImageUrl) && !rawOfficeTourVideoUrl
+          ? ''
+          : normalizeSupabaseStorageUrl(rawOfficeTourImageUrl);
 
       if (aboutPageOfficeImageFile) {
         const upload = await uploadStorageImage(aboutPageOfficeImageFile, session.access_token, 'about-page', {
@@ -988,7 +1031,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
             updateUploadProgress(`Uploading office image... ${percent}%`, percent);
           },
         });
-        officeTourImageUrl = upload.signedUrl || upload.publicUrl;
+        officeTourImageUrl = getUploadedStorageUrl(upload);
         completedUploads += 1;
       }
 
@@ -1017,7 +1060,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
           continue;
         }
 
-        let imageUrl = member.imageUrl.trim();
+        let imageUrl = normalizeSupabaseStorageUrl(member.imageUrl.trim());
 
         if (member.file instanceof File) {
           const uploadLabelNumber = completedUploads + 1;
@@ -1029,7 +1072,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
               );
             },
           });
-          imageUrl = upload.signedUrl || upload.publicUrl;
+          imageUrl = getUploadedStorageUrl(upload);
           completedUploads += 1;
         }
 
@@ -1156,7 +1199,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
         setFeaturedAlbumProgressLabel('Saving album content...');
       }
 
-      let imageUrl = featuredAlbumForm.imageUrl.trim();
+      let imageUrl = normalizeSupabaseStorageUrl(featuredAlbumForm.imageUrl.trim());
 
       if (featuredAlbumFile) {
         const upload = await uploadStorageImage(featuredAlbumFile, session.access_token, 'featured-albums', {
@@ -1164,7 +1207,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
             updateUploadProgress(`Uploading cover image... ${percent}%`, percent);
           },
         });
-        imageUrl = upload.signedUrl || upload.publicUrl;
+        imageUrl = getUploadedStorageUrl(upload);
         completedUploads += 1;
       }
 
@@ -1183,7 +1226,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
           continue;
         }
 
-        let galleryImageUrl = item.imageUrl.trim();
+        let galleryImageUrl = normalizeSupabaseStorageUrl(item.imageUrl.trim());
 
         if (item.file instanceof File) {
           const uploadLabelNumber = completedUploads + 1;
@@ -1195,7 +1238,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
               );
             },
           });
-          galleryImageUrl = upload.signedUrl || upload.publicUrl;
+          galleryImageUrl = getUploadedStorageUrl(upload);
           completedUploads += 1;
         }
 
@@ -1371,11 +1414,11 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
     setError('');
 
     try {
-      let logoUrl = siteIdentityForm.logoUrl.trim();
+      let logoUrl = normalizeSupabaseStorageUrl(siteIdentityForm.logoUrl.trim());
 
       if (siteIdentityLogoFile instanceof File) {
         const upload = await uploadStorageImage(siteIdentityLogoFile, session.access_token, 'site-identity');
-        logoUrl = upload.signedUrl || upload.publicUrl;
+        logoUrl = getUploadedStorageUrl(upload);
       }
 
       const payload = {
@@ -1484,7 +1527,8 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
 
       for (let index = 0; index < sampleWorkItems.length; index += 1) {
         const item = sampleWorkItems[index];
-        let imageUrl = typeof item?.image === 'string' ? item.image.trim() : '';
+        let imageUrl =
+          typeof item?.image === 'string' ? normalizeSupabaseStorageUrl(item.image.trim()) : '';
 
         if (item?.file instanceof File) {
           const uploadLabelNumber = completedUploads + 1;
@@ -1496,7 +1540,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
               );
             },
           });
-          imageUrl = upload.signedUrl || upload.publicUrl;
+          imageUrl = getUploadedStorageUrl(upload);
           completedUploads += 1;
         }
 
@@ -1538,11 +1582,12 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
     try {
       const nextShowcase = await Promise.all(
         (nextSections?.packageShowcase || []).map(async (card) => {
-          let imageUrl = typeof card?.image === 'string' ? card.image : '';
+          let imageUrl =
+            typeof card?.image === 'string' ? normalizeSupabaseStorageUrl(card.image) : '';
 
           if (card?.file instanceof File) {
             const upload = await uploadStorageImage(card.file, session.access_token, 'package-showcase');
-            imageUrl = upload.signedUrl || upload.publicUrl;
+            imageUrl = getUploadedStorageUrl(upload);
           }
 
           return {
@@ -1918,7 +1963,11 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
 
                 {(previewUrl || form.imageUrl) && (
                   <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-stone-200 bg-stone-50">
-                    <img src={previewUrl || form.imageUrl} alt="Slide preview" className="h-56 w-full object-cover" />
+                    <img
+                      src={normalizeSupabaseStorageUrl(previewUrl || form.imageUrl)}
+                      alt="Slide preview"
+                      className="h-56 w-full object-cover"
+                    />
                   </div>
                 )}
 
@@ -1959,12 +2008,12 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                   <div className="mt-8 space-y-5">
                     {slides.map((slide) => (
                       <article
-                        key={slide.id}
+                        key={slide._adminKey}
                         className="overflow-hidden rounded-[1.5rem] border border-stone-200 bg-stone-50"
                       >
                         <div className="grid gap-4 md:grid-cols-[220px_1fr]">
                           <img
-                            src={slide.image_url}
+                            src={normalizeSupabaseStorageUrl(slide.image_url)}
                             alt={slide.title || 'Hero slide'}
                             className="h-full min-h-48 w-full object-cover"
                           />
@@ -1972,7 +2021,9 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                             <div className="flex flex-wrap items-start justify-between gap-4">
                               <div>
                                 <p className="text-lg font-semibold text-stone-950">{slide.title || 'Untitled slide'}</p>
-                                <p className="mt-2 break-all text-sm text-stone-600">{slide.image_url}</p>
+                                <p className="mt-2 break-all text-sm text-stone-600">
+                                  {normalizeSupabaseStorageUrl(slide.image_url)}
+                                </p>
                               </div>
                               <div className="rounded-full bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-stone-600">
                                 {slide.is_active ? 'Active' : 'Hidden'}
@@ -1981,7 +2032,9 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
 
                             <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-stone-600">
                               <span className="rounded-full bg-white px-4 py-2">Order: {slide.sort_order ?? 1}</span>
-                              <span className="rounded-full bg-white px-4 py-2">ID: {slide.id}</span>
+                              <span className="rounded-full bg-white px-4 py-2">
+                                ID: {slide.id || 'Imported row without UUID'}
+                              </span>
                             </div>
 
                             <div className="mt-6 flex flex-wrap gap-3">
@@ -1994,7 +2047,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                               </button>
                               <button
                                 type="button"
-                                onClick={() => handleDeleteSlide(slide.id)}
+                                onClick={() => handleDeleteSlide(slide)}
                                 className="rounded-full border border-rose-300 px-5 py-3 text-sm font-semibold text-rose-700 transition hover:border-rose-500 hover:text-rose-900"
                               >
                                 Delete
@@ -2185,7 +2238,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                 {(featuredAlbumPreviewUrl || featuredAlbumForm.imageUrl) && (
                   <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-stone-200 bg-stone-50">
                     <img
-                      src={featuredAlbumPreviewUrl || featuredAlbumForm.imageUrl}
+                      src={normalizeSupabaseStorageUrl(featuredAlbumPreviewUrl || featuredAlbumForm.imageUrl)}
                       alt="Featured album preview"
                       className="h-56 w-full object-cover"
                     />
@@ -2286,7 +2339,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                         {item.imageUrl && (
                           <div className="mt-4 overflow-hidden rounded-[1.25rem] border border-stone-200 bg-stone-50">
                             <img
-                              src={item.imageUrl}
+                              src={normalizeSupabaseStorageUrl(item.imageUrl)}
                               alt={item.caption || `Gallery image ${index + 1}`}
                               className="h-52 w-full object-cover"
                             />

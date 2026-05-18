@@ -4,7 +4,9 @@ import { normalizeAlbumStoryGalleries, normalizeFeaturedAlbums } from '@/lib/fea
 import { defaultHeroSlides, normalizeHeroSlides } from '@/lib/hero-slides';
 import { normalizePackageCards, normalizePackageDetailSections, normalizePackageShowcase } from '@/lib/package-content';
 import { normalizeSampleWorks, SAMPLE_WORK_FILTERS } from '@/lib/sample-works-content';
+import { getLatestSiteSectionRows } from '@/lib/site-sections';
 import { isSupabaseConfigured, listHeroSlides, listSiteSections } from '@/lib/supabase-browser';
+import { normalizeSupabaseStorageUrl } from '@/lib/storage-url';
 import {
   Camera,
   ChevronLeft,
@@ -62,7 +64,7 @@ const DEFAULT_EMAIL = 'hello@capturememories.com';
 const site = {
   brand: DEFAULT_BRAND,
   tagline: DEFAULT_TAGLINE,
-  logoUrl: '',
+  logoUrl: '/capture-memories-logo.png',
   email: DEFAULT_EMAIL,
   phone: HARDCODED_CONTACT_NUMBER,
   location: 'Dhaka, Bangladesh',
@@ -240,7 +242,7 @@ function normalizeSiteIdentity(content = {}) {
   return {
     brand: readText(content?.brand) || site.brand,
     tagline: readText(content?.tagline) || site.tagline,
-    logoUrl: readText(content?.logoUrl) || site.logoUrl,
+    logoUrl: normalizeSupabaseStorageUrl(readText(content?.logoUrl)) || site.logoUrl,
     email: readText(content?.email) || site.email,
     phone: HARDCODED_CONTACT_NUMBER,
     location: readText(content?.location) || site.location,
@@ -260,7 +262,7 @@ function normalizeFoundingMembers(members = []) {
     .map((member, index) => ({
       name: readText(member?.name) || `Team Member ${index + 1}`,
       role: readText(member?.role),
-      image: readText(member?.image),
+      image: normalizeSupabaseStorageUrl(readText(member?.image)),
       facebookUrl: readText(member?.facebookUrl),
       instagramUrl: readText(member?.instagramUrl),
       youtubeUrl: readText(member?.youtubeUrl),
@@ -298,7 +300,7 @@ function normalizeOfficeInfo(content = {}) {
 function normalizeOfficeTour(content = {}) {
   const nextTitle = readText(content?.title);
   const nextVideoUrl = readText(content?.videoUrl);
-  const nextImage = readText(content?.image);
+  const nextImage = normalizeSupabaseStorageUrl(readText(content?.image));
   const inferredVideoUrl = nextVideoUrl || (getYouTubeEmbedUrl(nextImage) ? nextImage : '');
 
   return {
@@ -1329,7 +1331,7 @@ function useSiteContentReady() {
 }
 
 function mergeSiteContent(sectionRows = []) {
-  const merged = sectionRows.reduce((accumulator, row) => {
+  const merged = getLatestSiteSectionRows(sectionRows).reduce((accumulator, row) => {
     if (!row?.section_key || typeof row.content === 'undefined' || row.content === null) {
       return accumulator;
     }
@@ -1413,6 +1415,7 @@ function Header({ pathname, navigate }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { site, navItems } = useSiteContent();
   const siteContentReady = useSiteContentReady();
+  const isAdminRoute = pathname === '/admin';
   const siteIdentity = normalizeSiteIdentity(site);
   const visibleNavItems = getVisibleNavItems(navItems);
   const headerSocialLinks = [
@@ -1448,7 +1451,13 @@ function Header({ pathname, navigate }) {
             onClick={() => navigate('/')}
             className="cursor-pointer text-left"
           >
-            <div className="header-brand-spotlight min-h-[1.75rem] text-xl font-semibold tracking-[0.3em] uppercase">
+            <div
+              className={`min-h-[1.75rem] text-xl font-semibold tracking-[0.3em] uppercase ${
+                isAdminRoute
+                  ? 'text-[#f4e3bf] [text-shadow:0_1px_0_rgba(0,0,0,0.5),0_0_18px_rgba(244,227,191,0.16)]'
+                  : 'header-brand-spotlight'
+              }`}
+            >
               {siteContentReady ? siteIdentity.brand : <Skeleton className="h-6 w-32 bg-stone-800" />}
             </div>
             <div className="min-h-[1rem] text-xs text-white/65">

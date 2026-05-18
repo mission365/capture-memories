@@ -4,7 +4,6 @@ import {
   getServerSupabaseConfig,
   readSupabaseServerResponse,
   serverSupabaseFetch,
-  serverSupabaseRequest,
 } from '@/lib/supabase-server'
 
 const RETRYABLE_STATUS_CODES = new Set([502, 503, 504])
@@ -71,27 +70,12 @@ export async function POST(request: Request) {
 
     await uploadWithRetry(`/storage/v1/object/${storageBucket}/${filePath}`, token, file)
 
-    let signedUrl = ''
-
-    try {
-      const signed = await serverSupabaseRequest(`/storage/v1/object/sign/${storageBucket}/${filePath}`, {
-        method: 'POST',
-        accessToken: token,
-        body: JSON.stringify({ expiresIn: 60 * 60 * 24 * 365 }),
-      })
-
-      const signedPath = typeof signed?.signedURL === 'string' ? signed.signedURL : typeof signed?.signedUrl === 'string' ? signed.signedUrl : ''
-      if (signedPath) {
-        signedUrl = signedPath.startsWith('http') ? signedPath : `${url}${signedPath.startsWith('/') ? '' : '/'}${signedPath}`
-      }
-    } catch (_error) {
-      signedUrl = ''
-    }
-
     return NextResponse.json({
       filePath,
+      // This bucket is public, so storing the stable public URL avoids broken previews
+      // after token expiry or when a project is migrated to a new Supabase account.
       publicUrl: `${url}/storage/v1/object/public/${storageBucket}/${filePath}`,
-      signedUrl,
+      signedUrl: '',
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Image upload failed.'

@@ -18,9 +18,17 @@ const playfairDisplay = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.app',
+  title: {
+    default: 'Capture Memories',
+    template: '%s | Capture Memories',
+  },
+  description: 'Capture Memories is a wedding photography and cinematography studio from Bangladesh.',
+  applicationName: 'Capture Memories',
+  icons: {
+    icon: '/capture-memories-logo.png',
+    shortcut: '/capture-memories-logo.png',
+    apple: '/capture-memories-logo.png',
+  },
 }
 
 export default function RootLayout({

@@ -1,6 +1,55 @@
 import { NextResponse } from 'next/server'
 import { getBearerToken, serverSupabaseRequest } from '@/lib/supabase-server'
 
+function readText(value: unknown) {
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+function buildHeroSlideParams(selector: unknown) {
+  const rawSelector =
+    selector && typeof selector === 'object' && !Array.isArray(selector)
+      ? (selector as Record<string, unknown>)
+      : {}
+
+  const params = new URLSearchParams({
+    select: '*',
+  })
+
+  const id = readText(rawSelector.id)
+
+  if (id) {
+    params.set('id', `eq.${id}`)
+    return params
+  }
+
+  const imageUrl = readText(rawSelector.imageUrl || rawSelector.image_url)
+  const createdAt = readText(rawSelector.createdAt || rawSelector.created_at)
+  const title = readText(rawSelector.title)
+  const sortOrder = Number(rawSelector.sortOrder ?? rawSelector.sort_order)
+
+  if (createdAt && imageUrl) {
+    params.set('created_at', `eq.${createdAt}`)
+    params.set('image_url', `eq.${imageUrl}`)
+    return params
+  }
+
+  if (imageUrl) {
+    params.set('image_url', `eq.${imageUrl}`)
+
+    if (Number.isFinite(sortOrder)) {
+      params.set('sort_order', `eq.${sortOrder}`)
+    }
+
+    if (title) {
+      params.set('title', `eq.${title}`)
+    }
+
+    return params
+  }
+
+  throw new Error('Hero slide identifier is missing.')
+}
+
 export async function GET(request: Request) {
   try {
     const token = getBearerToken(request.headers.get('authorization'))
@@ -52,11 +101,8 @@ export async function POST(request: Request) {
 export async function PATCH(request: Request) {
   try {
     const token = getBearerToken(request.headers.get('authorization'))
-    const { id, payload } = await request.json()
-    const params = new URLSearchParams({
-      id: `eq.${id}`,
-      select: '*',
-    })
+    const { id, payload, selector } = await request.json()
+    const params = buildHeroSlideParams(selector || { id })
 
     const result = await serverSupabaseRequest(`/rest/v1/hero_slides?${params.toString()}`, {
       method: 'PATCH',
@@ -77,11 +123,8 @@ export async function PATCH(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const token = getBearerToken(request.headers.get('authorization'))
-    const { id } = await request.json()
-    const params = new URLSearchParams({
-      id: `eq.${id}`,
-      select: '*',
-    })
+    const { id, selector } = await request.json()
+    const params = buildHeroSlideParams(selector || { id })
 
     const result = await serverSupabaseRequest(`/rest/v1/hero_slides?${params.toString()}`, {
       method: 'DELETE',

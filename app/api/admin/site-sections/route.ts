@@ -5,7 +5,7 @@ export async function GET(request: Request) {
   try {
     const token = getBearerToken(request.headers.get('authorization'))
     const params = new URLSearchParams({
-      select: 'section_key,content,updated_at',
+      select: 'section_key,content,created_at,updated_at',
       order: 'section_key.asc',
     })
 
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     const { sectionKey, content } = await request.json()
     const params = new URLSearchParams({
       on_conflict: 'section_key',
-      select: 'section_key,content,updated_at',
+      select: 'section_key,content,created_at,updated_at',
     })
 
     const result = await serverSupabaseRequest(`/rest/v1/site_sections?${params.toString()}`, {

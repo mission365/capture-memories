@@ -55,14 +55,17 @@ function SafeImage({ src, alt, className, ...props }) {
 }
 
 const PACKAGE_FALLBACK_ICONS = [Camera, Video, Gift, Sparkles, MessageSquare];
+const DEFAULT_BRAND = 'Capture Memories';
+const DEFAULT_TAGLINE = 'Capturing your precious moments with love and authenticity.';
+const DEFAULT_EMAIL = 'hello@capturememories.com';
 
 const site = {
-  brand: '',
-  tagline: '',
+  brand: DEFAULT_BRAND,
+  tagline: DEFAULT_TAGLINE,
   logoUrl: '',
-  email: '',
-  phone: '',
-  location: '',
+  email: DEFAULT_EMAIL,
+  phone: '+8801312-030609',
+  location: 'Dhaka, Bangladesh',
   facebookUrl: '',
   instagramUrl: '',
   youtubeUrl: '',
@@ -178,35 +181,26 @@ const addOnsCatalog = [
 
 const foundingMembers = [
   {
-    name: 'Avijit Nandy',
-    role: 'Co-Founder & Core Photographer',
+    name: 'Capture Memories Studio Team',
+    role: 'Photography, Cinematography & Storytelling',
     image: '',
-    facebookUrl: 'https://facebook.com',
-    instagramUrl: 'https://instagram.com',
+    facebookUrl: '',
+    instagramUrl: '',
     youtubeUrl: '',
-    email: 'hello@chitrostyle.com',
-  },
-  {
-    name: 'Amin Abu Ahmed Ashraf (Dolon)',
-    role: 'Co-Founder & Core Photographer',
-    image: '',
-    facebookUrl: 'https://facebook.com',
-    instagramUrl: 'https://instagram.com',
-    youtubeUrl: '',
-    email: 'hello@chitrostyle.com',
+    email: DEFAULT_EMAIL,
   },
 ];
 
 const aboutIntro =
-  'Team ChitroStyle is a group of passionate and talented individuals who come together to create stunning images and capture beautiful moments on your special day. Each team member brings their unique skill set and perspective to the table, ensuring that every aspect of your wedding photography is covered. Every team member plays a critical role in bringing your vision to life. The team also includes skilled editors who work behind the scenes to enhance the images, create a cohesive story, and produce a final product that exceeds your expectations. With our wedding photography team by your side, you can rest assured that every moment of your special day will be captured flawlessly.';
+  `${DEFAULT_BRAND} is a passionate photography and cinematography team dedicated to preserving wedding stories with care, emotion, and detail. From intimate family moments to grand celebrations, we focus on creating timeless frames that feel natural, elegant, and deeply personal.`;
 
-const homeIntro = `Welcome to ${site.brand}, a creative wedding photography team from Bangladesh. Our journey began more than a decade ago. We believe every wedding is unique, and we tell the story through our photos. From the villages to the cities, we have been documenting Bangladeshi weddings with warmth, emotion, and timeless detail.`;
+const homeIntro = `Welcome to ${site.brand}, a wedding photography and cinematography team from Bangladesh. We document celebrations with warmth, honest emotion, and timeless storytelling so every frame still feels alive long after the day is over.`;
 
 const aboutPageContent = {
-  eyebrow: 'About Us',
-  title: 'About Us',
+  eyebrow: DEFAULT_BRAND,
+  title: `About ${DEFAULT_BRAND}`,
   teamEyebrow: 'Our Team',
-  teamTitle: 'Founding Members',
+  teamTitle: 'Core Team',
   officeHeading: 'Our Office',
   phoneHeading: 'Phone',
 };
@@ -222,8 +216,8 @@ const officeInfo = {
 
 const officeTour = {
   image: '',
-  title: '',
-  subtitle: '',
+  title: `Life at ${DEFAULT_BRAND}`,
+  subtitle: 'A small look at the people, process, and passion behind the stories we deliver.',
   videoUrl: '',
 };
 
@@ -298,7 +292,7 @@ function normalizeOfficeTour(content = {}) {
 
   return {
     image: getYouTubeEmbedUrl(nextImage) ? officeTour.image : nextImage || officeTour.image,
-    title: nextTitle && nextTitle !== 'Life at ChitroStyle' ? nextTitle : officeTour.title,
+    title: nextTitle && nextTitle !== `Life at ${DEFAULT_BRAND}` ? nextTitle : officeTour.title,
     subtitle: readText(content?.subtitle) || officeTour.subtitle,
     videoUrl: inferredVideoUrl && inferredVideoUrl !== 'https://youtube.com' ? inferredVideoUrl : officeTour.videoUrl,
   };
@@ -1244,10 +1238,10 @@ function Footer({ navigate }) {
           <div className="space-y-6">
             <div>
               <h3 className="text-2xl font-semibold tracking-wider text-white uppercase">
-                {siteIdentity.brand || 'ChitroStyle'}
+                {siteIdentity.brand || DEFAULT_BRAND}
               </h3>
               <p className="mt-3 text-sm leading-6 text-stone-400">
-                {siteIdentity.tagline || 'Capturing your precious moments with love and authenticity.'}
+                {siteIdentity.tagline || DEFAULT_TAGLINE}
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -1304,7 +1298,7 @@ function Footer({ navigate }) {
               <div className="flex items-center gap-3">
                 <Mail className="h-4 w-4 shrink-0 text-stone-500" />
                 <a href={`mailto:${siteIdentity.email}`} className="text-sm text-stone-600 hover:text-white transition">
-                  {siteIdentity.email || 'hello@chitrostyle.com'}
+                  {siteIdentity.email || DEFAULT_EMAIL}
                 </a>
               </div>
             </div>
@@ -1327,7 +1321,7 @@ function Footer({ navigate }) {
         <div className="mt-16 border-t border-white/10 pt-8">
           <div className="flex flex-col items-center justify-between gap-6 text-center md:flex-row md:text-left">
             <p className="text-[11px] uppercase tracking-[0.2em] text-stone-500">
-              © {currentYear} {siteIdentity.brand || 'ChitroStyle'} Inc. All rights reserved.
+              © {currentYear} {siteIdentity.brand || DEFAULT_BRAND}. All rights reserved.
             </p>
             <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-stone-500">
               <span>Made with love by</span>
@@ -2185,7 +2179,7 @@ function OutsideDhakaPackagesPage({ navigate }) {
   return (
     <PackageTabsPage
       title="Outside Dhaka Packages"
-      description="For couples planning stories beyond the city, these destination-focused packages are designed to cover travel, outdoor portraits, and long-form event documentation with the same ChitroStyle feel."
+      description="For couples planning stories beyond the city, these destination-focused packages are designed to cover travel, outdoor portraits, and long-form event documentation with the same Capture Memories storytelling touch."
       tabs={outsideDhakaTabs}
       navigate={navigate}
     />

@@ -2069,7 +2069,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                       value={featuredAlbumForm.title}
                       onChange={(event) => setFeaturedAlbumForm((current) => ({ ...current, title: event.target.value }))}
                       className="mt-2 w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm outline-none transition focus:border-stone-500"
-                      placeholder="Urban Exhibition Chitro"
+                      placeholder="Monsoon Wedding Story"
                       required
                     />
                   </label>
@@ -2081,7 +2081,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                       value={featuredAlbumForm.slug}
                       onChange={(event) => setFeaturedAlbumForm((current) => ({ ...current, slug: event.target.value }))}
                       className="mt-2 w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm outline-none transition focus:border-stone-500"
-                      placeholder="urban-exhibition-chitro"
+                      placeholder="monsoon-wedding-story"
                       required
                     />
                     <p className="mt-2 text-xs leading-6 text-stone-500">
@@ -2098,7 +2098,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                       value={featuredAlbumForm.heroTitle}
                       onChange={(event) => setFeaturedAlbumForm((current) => ({ ...current, heroTitle: event.target.value }))}
                       className="mt-2 w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm outline-none transition focus:border-stone-500"
-                      placeholder="Urban Exhibition Chitro"
+                      placeholder="Monsoon Wedding Story"
                     />
                   </label>
 
@@ -2109,7 +2109,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                       value={featuredAlbumForm.heroSubtitle}
                       onChange={(event) => setFeaturedAlbumForm((current) => ({ ...current, heroSubtitle: event.target.value }))}
                       className="mt-2 w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm outline-none transition focus:border-stone-500"
-                      placeholder="CHITROGOLPO OF THE CITY"
+                      placeholder="CAPTURE MEMORIES ALBUM STORY"
                     />
                   </label>
                 </div>

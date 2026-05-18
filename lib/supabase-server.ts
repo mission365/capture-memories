@@ -11,6 +11,7 @@ export function getServerSupabaseConfig() {
   return {
     url: process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || '',
     anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() || '',
+    serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || '', // 👈 add
     storageBucket: process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET?.trim() || 'site-assets',
   }
 }
@@ -24,10 +25,11 @@ export function getBearerToken(authorizationHeader?: string | null) {
 }
 
 function createServerSupabaseHeaders({ accessToken, contentType, json = true, prefer }: SupabaseRequestOptions = {}) {
-  const { anonKey } = getServerSupabaseConfig()
+  const { anonKey, serviceRoleKey } = getServerSupabaseConfig()
+  const key = serviceRoleKey || anonKey  // 👈 service role key use করো
   const headers: Record<string, string> = {
-    apikey: anonKey,
-    Authorization: `Bearer ${accessToken || anonKey}`,
+    apikey: key,
+    Authorization: `Bearer ${accessToken || key}`,  // 👈
   }
 
   if (contentType) {

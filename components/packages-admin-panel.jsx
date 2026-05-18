@@ -440,6 +440,19 @@ export default function PackagesAdminPanel({ sections, saving, onRefresh, onSave
               </div>
             ))}
           </div>
+
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-stone-600">
+              Save from here when you finish updating the showcase cards.
+            </p>
+            <button
+              type="submit"
+              disabled={saving}
+              className="rounded-full bg-stone-900 px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {saving ? 'Saving packages...' : 'Save All Package Content'}
+            </button>
+          </div>
         </div>
 
         <div className="mt-8 space-y-8">

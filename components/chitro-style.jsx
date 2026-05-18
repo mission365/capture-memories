@@ -83,7 +83,7 @@ const navItems = [
 
 const packages = [
   {
-    name: 'River Gorai',
+    name: 'Jarul',
     badge: 'Starter',
     price: '৳45,000',
     summary: 'Simple and elegant wedding coverage for intimate celebrations.',
@@ -165,7 +165,18 @@ const featuredAlbums = [];
 
 const albumStoryGalleries = {};
 
-const packageShowcase = normalizePackageShowcase([]);
+const packageShowcase = normalizePackageShowcase([
+  {
+    link: '/packages/sonaton',
+    name: 'Sonaton Package',
+    image: 'https://ruyqtwycffypwwfvgdme.supabase.co/storage/v1/object/public/site-assets/package-showcase/1777476052430-1s4a4597.jpg',
+  },
+  {
+    link: '/packages/muslim',
+    name: 'Muslim Package',
+    image: 'https://ruyqtwycffypwwfvgdme.supabase.co/storage/v1/object/public/site-assets/package-showcase/1777476178555-1s4a2238.jpg',
+  },
+]);
 
 const addOnsCatalog = [
   { name: 'Storybook', image: '' },
@@ -934,16 +945,347 @@ const outdoorTabs = [
 ];
 
 const sonatonPackages = normalizePackageCards([
-  ...(insideDhakaTabs.find((tab) => tab.id === 'sonaton')?.sections ?? []),
-  ...(outsideDhakaTabs.find((tab) => tab.id === 'sonaton')?.sections ?? []),
-].flatMap((section) => section.items ?? []));
+  {
+    title: 'Jarul-জারুল',
+    price: '52000 BDT',
+    subtitle: '',
+    note: 'This is Only Bride side package. You can add Groom side.',
+    features: ['1 Photographer', '1 Cinematographer', 'HoludSnan+Biye+Bashibiye+Biday'],
+    secondary: null,
+    detailSections: [
+      {
+        title: 'Package Highlights',
+        price: '',
+        lines: ['1 Photographer', '1 Cinematographer', 'HoludSnan+Biye+Bashibiye+Biday'],
+      },
+      {
+        title: 'Photo Service',
+        price: '',
+        lines: [
+          'Unlimited Photos & all best photo post processed',
+          'Matt print 100 X 4R & 1 X 12L',
+          'No Albums in this package, but you can take our photobook add-ons service',
+        ],
+      },
+      {
+        title: 'Video Service',
+        price: '',
+        lines: ['4 edited videos (1920x1080)', '2 promo 3/4 minutes', '2 full documentation video'],
+      },
+      {
+        title: 'Delivery Service',
+        price: '',
+        lines: ['Digital copies will be provided via google drive or client\'s pendrive.'],
+      },
+      {
+        title: 'Terms & Conditions',
+        price: '',
+        lines: [
+          'Digital copies will be provided via google drive or the client\'s pendrive.',
+          'Capture Memories holds the right to publish or unpublish on social media.',
+          '30% of the total payment must be paid in advance to confirm the event.',
+          'Time durations are continual & Extra hour charges are applicable.',
+        ],
+      },
+    ],
+  },
+  {
+    title: 'Krishnochura-কৃষ্ণচূড়া',
+    price: '75000 BDT',
+    subtitle: '',
+    note: 'This is Only Bride side package. You can add Groom side.',
+    features: ['2 Photographers', '1 Cinematographer', 'HoludSnan+Biye+Bashibiye+Biday'],
+    secondary: null,
+    detailSections: [
+      {
+        title: 'Package Highlights',
+        price: '',
+        lines: ['2 Photographers', '1 Cinematographer', 'HoludSnan+Biye+Bashibiye+Biday'],
+      },
+      {
+        title: 'Photo Service',
+        price: '',
+        lines: [
+          'Unlimited Photos & all best photo post processed',
+          'Matt print 100 X 4R & 2 X 12L',
+          'No Albums in this package, but you can take our photobook add-ons service',
+        ],
+      },
+      {
+        title: 'Video Service',
+        price: '',
+        lines: ['4 edited videos (1920x1080)', '2 promo 3/4 minutes', '2 full documentation video'],
+      },
+      {
+        title: 'Delivery Service',
+        price: '',
+        lines: ['Digital copies will be provided via google drive or client\'s pendrive.'],
+      },
+      {
+        title: 'Terms & Conditions',
+        price: '',
+        lines: [
+          'Digital copies will be provided via google drive or the client\'s pendrive.',
+          'Capture Memories holds the right to publish or unpublish on social media.',
+          '30% of the total payment must be paid in advance to confirm the event.',
+          'Time durations are continual & Extra hour charges are applicable.',
+        ],
+      },
+    ],
+  },
+  {
+    title: 'Chameli-চামেলী',
+    price: '95000 BDT',
+    subtitle: '',
+    note: 'This is Only Bride side package. You can add Groom side.',
+    features: ['2 Photographers', '2 Cinematographers', 'HoludSnan+Biye+Bashibiye+Biday+PhotoBook'],
+    secondary: null,
+    detailSections: [
+      {
+        title: 'Package Highlights',
+        price: '',
+        lines: ['2 Photographers', '2 Cinematographers', 'HoludSnan+Biye+Bashibiye+Biday+PhotoBook'],
+      },
+      {
+        title: 'Photo Service',
+        price: '',
+        lines: ['A nice PhotoBook', 'Unlimited Photos & all best photo post processed'],
+      },
+      {
+        title: 'Video Service',
+        price: '',
+        lines: ['4 edited videos (1920x1080)', '2 promo 3/4 minutes', '2 full documentation video'],
+      },
+      {
+        title: 'Delivery Service',
+        price: '',
+        lines: ['Digital copies will be provided via google drive or client\'s pendrive.'],
+      },
+      {
+        title: 'Terms & Conditions',
+        price: '',
+        lines: [
+          'Digital copies will be provided via google drive or the client\'s pendrive.',
+          'Capture Memories holds the right to publish or unpublish on social media.',
+          '30% of the total payment must be paid in advance to confirm the event.',
+          'Time durations are continual & Extra hour charges are applicable.',
+        ],
+      },
+    ],
+  },
+  {
+    title: 'Bokul-বকুল',
+    price: '125000 BDT',
+    subtitle: '',
+    note: 'Both Bride & Groom side package',
+    features: ['3 Photographers', '2 Cinematographers', 'HoludSnan+Biye+Bashibiye+Biday+PhotoBook'],
+    secondary: null,
+    detailSections: [
+      {
+        title: 'Package Highlights',
+        price: '',
+        lines: ['3 Photographers', '2 Cinematographers', 'HoludSnan+Biye+Bashibiye+Biday+PhotoBook'],
+      },
+      {
+        title: 'Photo Service',
+        price: '',
+        lines: ['A nice PhotoBook', 'Unlimited Photos & all best photo post processed'],
+      },
+      {
+        title: 'Video Service',
+        price: '',
+        lines: ['4 edited videos (1920x1080)', '2 promo 3/4 minutes', '2 full documentation video'],
+      },
+      {
+        title: 'Delivery Service',
+        price: '',
+        lines: ['Digital copies will be provided via google drive or client\'s pendrive.'],
+      },
+      {
+        title: 'Terms & Conditions',
+        price: '',
+        lines: [
+          'Digital copies will be provided via google drive or the client\'s pendrive.',
+          'Capture Memories holds the right to publish or unpublish on social media.',
+          '30% of the total payment must be paid in advance to confirm the event.',
+          'Time durations are continual & Extra hour charges are applicable.',
+        ],
+      },
+    ],
+  },
+]);
 
 const muslimPackages = normalizePackageCards([
-  ...(insideDhakaTabs.find((tab) => tab.id === 'regular')?.sections ?? []),
-  ...(insideDhakaTabs.find((tab) => tab.id === 'homely')?.sections ?? []),
-  ...(outsideDhakaTabs.find((tab) => tab.id === 'regular')?.sections ?? []),
-  ...outdoorTabs.flatMap((tab) => tab.sections ?? []),
-].flatMap((section) => section.items ?? []));
+  {
+    title: 'Photography',
+    price: '7500 BDT',
+    subtitle: '',
+    note: '',
+    features: ['1 Photographer', '5 hours Duration', 'No Prints'],
+    secondary: null,
+    detailSections: [
+      {
+        title: 'Package Highlights',
+        price: '',
+        lines: ['1 Photographer', '5 hours Duration', 'No Prints'],
+      },
+      {
+        title: 'Photo Service',
+        price: '',
+        lines: [
+          'Unlimited Photos & all best photo post processed',
+          'No prints/Albums in this package , but you can take our print service.',
+        ],
+      },
+      {
+        title: 'Delivery Service',
+        price: '',
+        lines: ['Digital copies will be provided via google drive or client\'s pendrive.'],
+      },
+      {
+        title: 'Terms & Conditions',
+        price: '',
+        lines: [
+          'Digital copies will be provided via google drive or the client\'s pendrive.',
+          'Capture Memories holds the right to publish or unpublish on social media.',
+          '30% of the total payment must be paid in advance to confirm the event.',
+          'Time durations are continual & Extra hour charges are applicable.',
+        ],
+      },
+    ],
+  },
+  {
+    title: 'Shiuli-শিউলি',
+    price: '12999 BDT',
+    subtitle: '',
+    note: '',
+    features: ['1 Photographer', '1 Cinematographer', '5 hours Duration', 'No Prints'],
+    secondary: null,
+    detailSections: [
+      {
+        title: 'Package Highlights',
+        price: '',
+        lines: ['1 Photographer', '1 Cinematographer', '5 hours Duration', 'No Prints'],
+      },
+      {
+        title: 'Photo Service',
+        price: '',
+        lines: [
+          'Unlimited Photos & all best photo post processed',
+          'No prints/Albums in this package , but you can take our print service.',
+        ],
+      },
+      {
+        title: 'Video Service',
+        price: '',
+        lines: ['2 edited videos (1920x1080)', '1 promo 2/3 minutes', '1 full documentation video'],
+      },
+      {
+        title: 'Delivery Service',
+        price: '',
+        lines: ['Digital copies will be provided via google drive or client\'s pendrive.'],
+      },
+      {
+        title: 'Terms & Conditions',
+        price: '',
+        lines: [
+          'Digital copies will be provided via google drive or the client\'s pendrive.',
+          'Capture Memories holds the right to publish or unpublish on social media.',
+          '30% of the total payment must be paid in advance to confirm the event.',
+          'Time durations are continual & Extra hour charges are applicable.',
+        ],
+      },
+    ],
+  },
+  {
+    title: 'Kadom-কদম',
+    price: '17999 BDT',
+    subtitle: '',
+    note: '',
+    features: ['2 Photographers', '1 Cinematographer', '5 hours Duration'],
+    secondary: null,
+    detailSections: [
+      {
+        title: 'Package Highlights',
+        price: '',
+        lines: ['2 Photographers', '1 Cinematographer', '5 hours Duration'],
+      },
+      {
+        title: 'Photo Service',
+        price: '',
+        lines: [
+          'Unlimited Photos & all best photo post processed.',
+          '50 pics Prints',
+          'No Albums in this package , but you can take our Albums service.',
+        ],
+      },
+      {
+        title: 'Video Service',
+        price: '',
+        lines: ['2 edited videos (1920x1080)', '1 promo 2/3 minutes', '1 full documentation video'],
+      },
+      {
+        title: 'Delivery Service',
+        price: '',
+        lines: ['Digital copies will be provided via google drive or client\'s pendrive.'],
+      },
+      {
+        title: 'Terms & Conditions',
+        price: '',
+        lines: [
+          'Digital copies will be provided via google drive or the client\'s pendrive.',
+          'Capture Memories holds the right to publish or unpublish on social media.',
+          '30% of the total payment must be paid in advance to confirm the event.',
+          'Time durations are continual & Extra hour charges are applicable.',
+        ],
+      },
+    ],
+  },
+  {
+    title: 'Sonalu-সোনালু',
+    price: '24999 BDT',
+    subtitle: '',
+    note: '',
+    features: ['2 Photographers', '2 Cinematographers', '5 hours Duration', '50 pics Prints'],
+    secondary: null,
+    detailSections: [
+      {
+        title: 'Package Highlights',
+        price: '',
+        lines: ['2 Photographers', '2 Cinematographers', '5 hours Duration', '50 pics Prints'],
+      },
+      {
+        title: 'Photo Service',
+        price: '',
+        lines: [
+          'Unlimited Photos & all best photo post processed.',
+          '50 pics Prints.',
+          'No Albums in this package , but you can take our Albums service.',
+        ],
+      },
+      {
+        title: 'Video Service',
+        price: '',
+        lines: ['2 edited videos (1920x1080)', '1 promo 2/3 minutes', '1 full documentation video'],
+      },
+      {
+        title: 'Delivery Service',
+        price: '',
+        lines: ['Digital copies will be provided via google drive or client\'s pendrive.'],
+      },
+      {
+        title: 'Terms & Conditions',
+        price: '',
+        lines: [
+          'Digital copies will be provided via google drive or the client\'s pendrive.',
+          'Capture Memories holds the right to publish or unpublish on social media.',
+          '30% of the total payment must be paid in advance to confirm the event.',
+          'Time durations are continual & Extra hour charges are applicable.',
+        ],
+      },
+    ],
+  },
+]);
 
 const defaultSiteContent = {
   site: normalizeSiteIdentity(site),

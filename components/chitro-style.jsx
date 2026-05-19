@@ -2,7 +2,12 @@ import HeroSliderAdmin from '@/components/hero-slider-admin';
 import { createWhatsAppLink, DEFAULT_BOOK_US_CONTENT, HARDCODED_CONTACT_NUMBER, normalizeBookUsContent } from '@/lib/book-us-content';
 import { normalizeAlbumStoryGalleries, normalizeFeaturedAlbums } from '@/lib/featured-albums';
 import { defaultHeroSlides, normalizeHeroSlides } from '@/lib/hero-slides';
-import { normalizePackageCards, normalizePackageDetailSections, normalizePackageShowcase } from '@/lib/package-content';
+import {
+  normalizePackageCards,
+  normalizePackageCatalog,
+  normalizePackageDetailSections,
+  normalizePackageShowcase,
+} from '@/lib/package-content';
 import { normalizeSampleWorks, SAMPLE_WORK_FILTERS } from '@/lib/sample-works-content';
 import { getLatestSiteSectionRows } from '@/lib/site-sections';
 import { isSupabaseConfigured, listHeroSlides, listSiteSections } from '@/lib/supabase-browser';
@@ -1289,6 +1294,25 @@ const muslimPackages = normalizePackageCards([
   },
 ]);
 
+const packageCatalog = normalizePackageCatalog([
+  {
+    slug: 'sonaton',
+    name: packageShowcase.find((item) => item.link === '/packages/sonaton')?.name || 'Sonaton Package',
+    description:
+      'Browse Sonaton wedding packages with curated coverage options for holud, biye, bashibiye, and destination celebrations.',
+    image: packageShowcase.find((item) => item.link === '/packages/sonaton')?.image || '',
+    items: sonatonPackages,
+  },
+  {
+    slug: 'muslim',
+    name: packageShowcase.find((item) => item.link === '/packages/muslim')?.name || 'Muslim Package',
+    description:
+      'Explore Muslim wedding packages across inside Dhaka, destination events, and outdoor sessions with flexible coverage for akdh, holud, mehdi, wedding day, and related occasions.',
+    image: packageShowcase.find((item) => item.link === '/packages/muslim')?.image || '',
+    items: muslimPackages,
+  },
+]);
+
 const defaultSiteContent = {
   site: normalizeSiteIdentity(site),
   navItems,
@@ -1306,6 +1330,7 @@ const defaultSiteContent = {
   insideDhakaTabs,
   outsideDhakaTabs,
   outdoorTabs,
+  packageCatalog,
   sonatonPackages,
   muslimPackages,
 };
@@ -1330,8 +1355,31 @@ function useSiteContentReady() {
   return useContext(SiteContentReadyContext);
 }
 
+function buildPackageCatalogFromLegacyContent(source = {}, fallbackCatalog = []) {
+  const normalizedFallbackCatalog = normalizePackageCatalog(undefined, fallbackCatalog);
+  const showcaseItems = normalizePackageShowcase(source.packageShowcase);
+
+  return normalizePackageCatalog(
+    normalizedFallbackCatalog.map((category) => {
+      const collectionKey = `${category.slug}Packages`;
+      const showcaseItem = showcaseItems.find((item) => item.link === category.link);
+
+      return {
+        slug: category.slug,
+        name: showcaseItem?.name || category.name,
+        description: category.description,
+        image: showcaseItem?.image || category.image,
+        items: source[collectionKey],
+      };
+    }),
+    normalizedFallbackCatalog
+  );
+}
+
 function mergeSiteContent(sectionRows = []) {
-  const merged = getLatestSiteSectionRows(sectionRows).reduce((accumulator, row) => {
+  const latestRows = getLatestSiteSectionRows(sectionRows);
+  const hasPackageCatalogRow = latestRows.some((row) => row?.section_key === 'packageCatalog');
+  const merged = latestRows.reduce((accumulator, row) => {
     if (!row?.section_key || typeof row.content === 'undefined' || row.content === null) {
       return accumulator;
     }
@@ -1347,6 +1395,8 @@ function mergeSiteContent(sectionRows = []) {
               ? normalizeFeaturedAlbums(row.content)
               : row.section_key === 'albumStoryGalleries'
                 ? normalizeAlbumStoryGalleries(row.content)
+                : row.section_key === 'packageCatalog'
+                  ? normalizePackageCatalog(row.content)
                 : row.section_key === 'packageShowcase'
                   ? normalizePackageShowcase(row.content)
                   : row.section_key === 'sonatonPackages' || row.section_key === 'muslimPackages'
@@ -1381,10 +1431,29 @@ function mergeSiteContent(sectionRows = []) {
     officeInfo: nextAboutPageSource.officeInfo || legacyAboutPage.officeInfo,
     officeTour: nextAboutPageSource.officeTour || legacyAboutPage.officeTour,
   });
+  const nextPackageCatalog = hasPackageCatalogRow
+    ? normalizePackageCatalog(merged.packageCatalog)
+    : buildPackageCatalogFromLegacyContent(merged, defaultSiteContent.packageCatalog);
+  const nextPackageShowcase =
+    nextPackageCatalog.length > 0
+      ? normalizePackageShowcase(
+          nextPackageCatalog.map((category) => ({
+            slug: category.slug,
+            name: category.name,
+            image: category.image,
+          }))
+        )
+      : [];
+  const sonatonCategory = nextPackageCatalog.find((category) => category.slug === 'sonaton');
+  const muslimCategory = nextPackageCatalog.find((category) => category.slug === 'muslim');
 
   return {
     ...merged,
     aboutPage: nextAboutPage,
+    packageCatalog: nextPackageCatalog,
+    packageShowcase: nextPackageShowcase,
+    sonatonPackages: sonatonCategory?.items || [],
+    muslimPackages: muslimCategory?.items || [],
   };
 }
 
@@ -2550,29 +2619,15 @@ function OutdoorPackagesPage({ navigate }) {
   );
 }
 
-function SonatonPackagesPage({ navigate }) {
-  const { sonatonPackages, packageShowcase } = useSiteContent();
-  const sonatonShowcase = packageShowcase.find((item) => item.link === '/packages/sonaton');
-
+function PackageCategoryPage({ navigate, category }) {
   return (
     <PackageCardsPage
-      title={sonatonShowcase?.name || 'Sonaton Package'}
-      description="Browse Sonaton wedding packages with curated coverage options for holud, biye, bashibiye, and destination celebrations."
-      items={sonatonPackages}
-      navigate={navigate}
-    />
-  );
-}
-
-function MuslimPackagesPage({ navigate }) {
-  const { muslimPackages, packageShowcase } = useSiteContent();
-  const muslimShowcase = packageShowcase.find((item) => item.link === '/packages/muslim');
-
-  return (
-    <PackageCardsPage
-      title={muslimShowcase?.name || 'Muslim Package'}
-      description="Explore Muslim wedding packages across inside Dhaka, destination events, and outdoor sessions with flexible coverage for akdh, holud, mehdi, wedding day, and related occasions."
-      items={muslimPackages}
+      title={category?.name || 'Package'}
+      description={
+        category?.description ||
+        'Choose the package that best matches your event style, team size, and storytelling preference.'
+      }
+      items={Array.isArray(category?.items) ? category.items : []}
       navigate={navigate}
     />
   );
@@ -2649,17 +2704,17 @@ function PackagesPageLegacy({ navigate }) {
 }
 
 function PackagesPage({ navigate }) {
-  const { packageShowcase } = useSiteContent();
+  const { packageCatalog } = useSiteContent();
   const getShowcaseName = (item) => {
     const name = typeof item?.name === 'string' ? item.name.trim() : '';
     if (name) {
       return name;
     }
 
-    switch (item?.link) {
-      case '/packages/sonaton':
+    switch (item?.slug) {
+      case 'sonaton':
         return 'Sonaton Package';
-      case '/packages/muslim':
+      case 'muslim':
         return 'Muslim Package';
       default:
         return 'Packages';
@@ -2670,10 +2725,10 @@ function PackagesPage({ navigate }) {
     const image = typeof item?.image === 'string' ? item.image.trim() : '';
     if (image) return image;
 
-    switch (item?.link) {
-      case '/packages/sonaton':
+    switch (item?.slug) {
+      case 'sonaton':
         return 'https://images.unsplash.com/photo-1523437237164-d442d57cc3c9?auto=format&fit=crop&w=1400&q=80';
-      case '/packages/muslim':
+      case 'muslim':
         return 'https://images.unsplash.com/photo-1529636798458-92182e662485?auto=format&fit=crop&w=1400&q=80';
       default:
         return '';
@@ -2694,36 +2749,42 @@ function PackagesPage({ navigate }) {
             session.
           </p>
 
-          <div className="mx-auto mt-14 grid max-w-4xl gap-6 sm:grid-cols-2">
-            {packageShowcase.map((item) => (
-              <button
-                key={item.link}
-                type="button"
-                onClick={() => navigate(item.link)}
-                className="package-showcase-card group text-center"
-              >
-                <div className="relative min-h-[240px] overflow-hidden rounded-[1.75rem] border border-stone-200 bg-stone-50 shadow-sm transition duration-300 group-hover:-translate-y-1 group-hover:shadow-xl sm:min-h-[280px]">
-                  {getShowcaseImage(item) ? (
-                    <div className="absolute inset-0">
-                      <SafeImage
-                        src={getShowcaseImage(item)}
-                        alt={getShowcaseName(item)}
-                        className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    </div>
-                  ) : (
-                    <div className="absolute inset-0 bg-stone-200" />
-                  )}
-                </div>
+          {packageCatalog.length === 0 ? (
+            <div className="mx-auto mt-14 max-w-3xl rounded-[2rem] border border-stone-200 bg-stone-50 px-8 py-12 text-center text-stone-600">
+              No package categories have been added yet.
+            </div>
+          ) : (
+            <div className="mx-auto mt-14 grid max-w-4xl gap-6 sm:grid-cols-2">
+              {packageCatalog.map((item) => (
+                <button
+                  key={item.link || item.slug}
+                  type="button"
+                  onClick={() => navigate(item.link || '/packages')}
+                  className="package-showcase-card group text-center"
+                >
+                  <div className="relative min-h-[240px] overflow-hidden rounded-[1.75rem] border border-stone-200 bg-stone-50 shadow-sm transition duration-300 group-hover:-translate-y-1 group-hover:shadow-xl sm:min-h-[280px]">
+                    {getShowcaseImage(item) ? (
+                      <div className="absolute inset-0">
+                        <SafeImage
+                          src={getShowcaseImage(item)}
+                          alt={getShowcaseName(item)}
+                          className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </div>
+                    ) : (
+                      <div className="absolute inset-0 bg-stone-200" />
+                    )}
+                  </div>
 
-                <p className="mt-5 text-base font-medium text-stone-900 transition group-hover:text-stone-950 md:text-lg">
-                  {getShowcaseName(item)}
-                </p>
-              </button>
-            ))}
-          </div>
+                  <p className="mt-5 text-base font-medium text-stone-900 transition group-hover:text-stone-950 md:text-lg">
+                    {getShowcaseName(item)}
+                  </p>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </>
@@ -3291,11 +3352,21 @@ export default function ChitrogolpoInspiredFullSite() {
   }, []);
 
   const page = (() => {
+    const decodedPathname = decodeURIComponent(pathname);
     const isFeaturedAlbumPath = pathname.startsWith('/sample-works/') && pathname !== '/sample-works';
     const albumPage = siteContent.featuredAlbums.find((album) => {
       const targetPath = `/sample-works/${album.slug}`;
-      return pathname === targetPath || decodeURIComponent(pathname) === targetPath;
+      return pathname === targetPath || decodedPathname === targetPath;
     });
+    const packageStaticPaths = new Set([
+      '/packages',
+      '/packages/inside-dhaka',
+      '/packages/outside-dhaka',
+      '/packages/outdoor',
+      '/packages/add-ons',
+    ]);
+    const isDynamicPackagePath = decodedPathname.startsWith('/packages/') && !packageStaticPaths.has(decodedPathname);
+    const packageCategory = siteContent.packageCatalog.find((category) => decodedPathname === category.link);
 
     if (!siteContentReady && isFeaturedAlbumPath) {
       return (
@@ -3309,6 +3380,20 @@ export default function ChitrogolpoInspiredFullSite() {
 
     if (albumPage) {
       return <AlbumStoryPage album={albumPage} navigate={navigate} />;
+    }
+
+    if (!siteContentReady && isDynamicPackagePath && !packageCategory) {
+      return (
+        <section className="bg-white px-6 py-24 md:py-32">
+          <div className="mx-auto max-w-3xl rounded-[2rem] border border-stone-200 bg-stone-50 px-8 py-12 text-center text-stone-600">
+            Loading package page...
+          </div>
+        </section>
+      );
+    }
+
+    if (packageCategory) {
+      return <PackageCategoryPage category={packageCategory} navigate={navigate} />;
     }
 
     switch (pathname) {
@@ -3326,10 +3411,6 @@ export default function ChitrogolpoInspiredFullSite() {
         return <AboutPage navigate={navigate} />;
       case '/packages':
         return <PackagesPage navigate={navigate} />;
-      case '/packages/sonaton':
-        return <SonatonPackagesPage navigate={navigate} />;
-      case '/packages/muslim':
-        return <MuslimPackagesPage navigate={navigate} />;
       case '/packages/inside-dhaka':
         return <InsideDhakaPackagesPage navigate={navigate} />;
       case '/packages/outside-dhaka':

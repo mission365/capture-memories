@@ -13,7 +13,7 @@ import {
   normalizeAlbumStoryGalleries,
   normalizeFeaturedAlbums,
 } from '@/lib/featured-albums';
-import { normalizePackageCards, normalizePackageShowcase } from '@/lib/package-content';
+import { normalizePackageCatalog, normalizePackageCards, normalizePackageShowcase } from '@/lib/package-content';
 import { normalizeSampleWorks } from '@/lib/sample-works-content';
 import {
   clearStoredSupabaseSession,
@@ -59,11 +59,12 @@ function createEmptyFeaturedAlbumForm() {
 }
 
 const NEW_FEATURED_ALBUM_OPTION = '__new__';
-const PACKAGE_SECTION_DEFINITIONS = [
-  { key: 'packageShowcase', label: 'Package Showcase', description: 'Main packages page category cards and titles.' },
-  { key: 'sonatonPackages', label: 'Sonaton Packages', description: 'All cards shown on the Sonaton package page.' },
-  { key: 'muslimPackages', label: 'Muslim Packages', description: 'All cards shown on the Muslim package page.' },
-];
+const PACKAGE_CATALOG_SECTION = {
+  key: 'packageCatalog',
+  label: 'Package Catalog',
+  description: 'Create package categories, their landing cards, and the package cards shown inside each category page.',
+};
+const LEGACY_PACKAGE_SECTION_KEYS = ['packageShowcase', 'sonatonPackages', 'muslimPackages'];
 const ADMIN_WORKSPACES = [
   { id: 'slider', label: 'Slider', description: 'Hero slides, image upload, and display order.' },
   { id: 'albums', label: 'Featured Albums', description: 'Album covers, stories, and gallery images.' },
@@ -119,6 +120,38 @@ function normalizeSectionResponse(payload) {
 
 function isPlainObject(value) {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function getPackageCatalogContent(sectionMap = {}, defaultContent = {}) {
+  const fallbackCatalog = Array.isArray(defaultContent.packageCatalog) ? defaultContent.packageCatalog : [];
+
+  if (Object.prototype.hasOwnProperty.call(sectionMap, PACKAGE_CATALOG_SECTION.key)) {
+    return normalizePackageCatalog(sectionMap.packageCatalog, fallbackCatalog);
+  }
+
+  const showcaseItems = normalizePackageShowcase(
+    Object.prototype.hasOwnProperty.call(sectionMap, 'packageShowcase')
+      ? sectionMap.packageShowcase
+      : defaultContent.packageShowcase
+  );
+
+  const legacyCatalog = fallbackCatalog.map((category) => {
+    const collectionKey = `${category.slug}Packages`;
+    const savedItems = Object.prototype.hasOwnProperty.call(sectionMap, collectionKey)
+      ? sectionMap[collectionKey]
+      : defaultContent[collectionKey];
+    const showcaseItem = showcaseItems.find((item) => item.link === category.link);
+
+    return {
+      slug: category.slug,
+      name: showcaseItem?.name || category.name,
+      description: category.description,
+      image: showcaseItem?.image || category.image,
+      items: normalizePackageCards(savedItems),
+    };
+  });
+
+  return normalizePackageCatalog(legacyCatalog, fallbackCatalog);
 }
 
 function getMergedAboutPageContent(sectionMap = {}, defaultContent = {}) {
@@ -392,18 +425,15 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
     ? `/sample-works/${featuredAlbumForm.slug.trim()}`
     : '';
   const selectedFeaturedAlbumValue = editingFeaturedAlbumSlug || NEW_FEATURED_ALBUM_OPTION;
-  const packageSections = PACKAGE_SECTION_DEFINITIONS.map((section) => {
-    const hasCustomValue = Object.prototype.hasOwnProperty.call(sectionMap, section.key);
-    const rawValue = hasCustomValue ? sectionMap[section.key] : defaultContent[section.key];
-    const currentValue =
-      section.key === 'packageShowcase' ? normalizePackageShowcase(rawValue) : normalizePackageCards(rawValue);
-
-    return {
-      ...section,
-      currentValue,
-      hasCustomValue,
-    };
-  });
+  const hasLegacyPackageContent = LEGACY_PACKAGE_SECTION_KEYS.some((key) =>
+    Object.prototype.hasOwnProperty.call(sectionMap, key)
+  );
+  const packageCatalogSection = {
+    ...PACKAGE_CATALOG_SECTION,
+    currentValue: getPackageCatalogContent(sectionMap, defaultContent),
+    hasCustomValue:
+      Object.prototype.hasOwnProperty.call(sectionMap, PACKAGE_CATALOG_SECTION.key) || hasLegacyPackageContent,
+  };
   const hasSampleWorksCustomValue = Object.prototype.hasOwnProperty.call(sectionMap, 'sampleWorks');
   const sampleWorksHydrating = Boolean(session?.access_token) && !hasLoadedSections;
   const sampleWorksItems = normalizeSampleWorks(
@@ -439,7 +469,9 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
     },
     {
       ...ADMIN_WORKSPACES[6],
-      statusLabel: `${packageSections.length} package groups`,
+      statusLabel: loadingSections
+        ? 'Loading...'
+        : `${packageCatalogSection.currentValue.length} categor${packageCatalogSection.currentValue.length === 1 ? 'y' : 'ies'}`,
     },
     {
       ...ADMIN_WORKSPACES[7],
@@ -1580,40 +1612,32 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
     setError('');
 
     try {
-      const nextShowcase = await Promise.all(
-        (nextSections?.packageShowcase || []).map(async (card) => {
+      const nextCatalog = await Promise.all(
+        (nextSections?.packageCatalog || []).map(async (category) => {
           let imageUrl =
-            typeof card?.image === 'string' ? normalizeSupabaseStorageUrl(card.image) : '';
+            typeof category?.image === 'string' ? normalizeSupabaseStorageUrl(category.image) : '';
 
-          if (card?.file instanceof File) {
-            const upload = await uploadStorageImage(card.file, session.access_token, 'package-showcase');
+          if (category?.file instanceof File) {
+            const upload = await uploadStorageImage(category.file, session.access_token, 'package-showcase');
             imageUrl = getUploadedStorageUrl(upload);
           }
 
           return {
-            name: typeof card?.name === 'string' ? card.name : '',
-            link: typeof card?.link === 'string' ? card.link : '',
+            slug: typeof category?.slug === 'string' ? category.slug : '',
+            name: typeof category?.name === 'string' ? category.name : '',
+            description: typeof category?.description === 'string' ? category.description : '',
             image: imageUrl,
+            items: normalizePackageCards(category?.items),
           };
         })
       );
+      const normalizedCatalog = normalizePackageCatalog(nextCatalog, defaultContent.packageCatalog);
+      const response = await upsertSiteSection(PACKAGE_CATALOG_SECTION.key, normalizedCatalog, session.access_token);
+      const savedSection = normalizeSectionResponse(response);
 
-      const sectionPayloads = PACKAGE_SECTION_DEFINITIONS.map((section) => ({
-        key: section.key,
-        content:
-          section.key === 'packageShowcase'
-            ? normalizePackageShowcase(nextShowcase)
-            : normalizePackageCards(nextSections?.[section.key]),
-      }));
-
-      const responses = await Promise.all(
-        sectionPayloads.map((section) => upsertSiteSection(section.key, section.content, session.access_token))
-      );
-
-      responses
-        .map((response) => normalizeSectionResponse(response))
-        .filter(Boolean)
-        .forEach((savedSection) => patchSectionItem(savedSection));
+      if (savedSection) {
+        patchSectionItem(savedSection);
+      }
 
       setMessage('Package content updated successfully.');
     } catch (saveError) {
@@ -2579,7 +2603,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
 
             <div className={activeAdminSection === 'packages' ? 'block' : 'hidden'}>
               <PackagesAdminPanel
-                sections={packageSections}
+                catalogSection={packageCatalogSection}
                 saving={savingPackageSections}
                 onRefresh={() => loadSections(session.access_token)}
                 onSave={handleSavePackageSections}

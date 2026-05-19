@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import AboutPageAdminPanel from '@/components/about-page-admin-panel';
 import BookUsAdminPanel from '@/components/book-us-admin-panel';
 import PackagesAdminPanel from '@/components/packages-admin-panel';
@@ -356,6 +356,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
   const [editingFeaturedAlbumSlug, setEditingFeaturedAlbumSlug] = useState(null);
   const [featuredAlbumForm, setFeaturedAlbumForm] = useState(createEmptyFeaturedAlbumForm);
   const [featuredAlbumGalleryItems, setFeaturedAlbumGalleryItems] = useState(() => createEditableGalleryItems());
+  const [showFeaturedAlbumGalleryEditor, setShowFeaturedAlbumGalleryEditor] = useState(false);
   const [aboutPageForm, setAboutPageForm] = useState(() => createAboutPageForm(initialAboutPageContent));
   const [aboutPageMembers, setAboutPageMembers] = useState(() =>
     createEditableAboutMembers(initialAboutPageContent.foundingMembers)
@@ -374,6 +375,13 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
   const [sectionEditor, setSectionEditor] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const sliderEditorRef = useRef(null);
+  const sliderItemsScrollerRef = useRef(null);
+  const featuredAlbumEditorRef = useRef(null);
+  const featuredAlbumsScrollerRef = useRef(null);
+  const [sliderItemsPanelHeight, setSliderItemsPanelHeight] = useState(null);
+  const [sliderItemsViewportHeight, setSliderItemsViewportHeight] = useState(null);
+  const [featuredAlbumsPanelHeight, setFeaturedAlbumsPanelHeight] = useState(null);
 
   const supabaseConfig = getSupabaseConfig();
   const configured = isSupabaseConfigured();
@@ -483,6 +491,8 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
     sectionKey === 'aboutPage'
       ? Object.prototype.hasOwnProperty.call(sectionMap, 'aboutPage') || hasLegacyAboutPageValue
       : Object.prototype.hasOwnProperty.call(sectionMap, sectionKey);
+  const sliderItemsCardHeight = sliderItemsPanelHeight ? Math.min(sliderItemsPanelHeight + 108, 590) : 590;
+  const featuredAlbumsCardHeight = featuredAlbumsPanelHeight || null;
 
   useEffect(() => {
     if (!selectedFile) {
@@ -610,6 +620,124 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
 
     setSectionEditor(formatSectionValue(selectedSectionValue, selectedFallbackValue));
   }, [selectedFallbackValue, selectedSectionDefinition, selectedSectionValue]);
+
+  useEffect(() => {
+    if (activeAdminSection !== 'slider') {
+      setSliderItemsPanelHeight(null);
+      return;
+    }
+
+    const element = sliderEditorRef.current;
+
+    if (!element) {
+      return;
+    }
+
+    const updateHeight = () => {
+      setSliderItemsPanelHeight(element.offsetHeight || null);
+    };
+
+    updateHeight();
+
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', updateHeight);
+
+      return () => {
+        window.removeEventListener('resize', updateHeight);
+      };
+    }
+
+    const observer = new ResizeObserver(() => {
+      updateHeight();
+    });
+
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [activeAdminSection, editingId, previewUrl, form.imageUrl]);
+
+  useEffect(() => {
+    if (activeAdminSection !== 'slider') {
+      setSliderItemsViewportHeight(null);
+      return;
+    }
+
+    const element = sliderItemsScrollerRef.current;
+
+    if (!element) {
+      return;
+    }
+
+    const updateHeight = () => {
+      setSliderItemsViewportHeight(element.clientHeight || null);
+    };
+
+    updateHeight();
+
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', updateHeight);
+
+      return () => {
+        window.removeEventListener('resize', updateHeight);
+      };
+    }
+
+    const observer = new ResizeObserver(() => {
+      updateHeight();
+    });
+
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [activeAdminSection, sliderItemsPanelHeight]);
+
+  useEffect(() => {
+    if (activeAdminSection !== 'albums') {
+      setFeaturedAlbumsPanelHeight(null);
+      return;
+    }
+
+    const element = featuredAlbumEditorRef.current;
+
+    if (!element) {
+      return;
+    }
+
+    const updateHeight = () => {
+      setFeaturedAlbumsPanelHeight(element.offsetHeight || null);
+    };
+
+    updateHeight();
+
+    if (typeof ResizeObserver === 'undefined') {
+      window.addEventListener('resize', updateHeight);
+
+      return () => {
+        window.removeEventListener('resize', updateHeight);
+      };
+    }
+
+    const observer = new ResizeObserver(() => {
+      updateHeight();
+    });
+
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [
+    activeAdminSection,
+    editingFeaturedAlbumSlug,
+    featuredAlbumPreviewUrl,
+    featuredAlbumForm.imageUrl,
+    featuredAlbumGalleryItems.length,
+    showFeaturedAlbumGalleryEditor,
+  ]);
 
   async function loadSlides(accessToken) {
     setLoadingSlides(true);
@@ -896,6 +1024,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
     setEditingFeaturedAlbumSlug(null);
     setFeaturedAlbumFile(null);
     setFeaturedAlbumGalleryItems(createEditableGalleryItems());
+    setShowFeaturedAlbumGalleryEditor(false);
     if (options.clearProgress !== false) {
       setFeaturedAlbumProgress(0);
       setFeaturedAlbumProgressLabel('');
@@ -917,6 +1046,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
     setEditingFeaturedAlbumSlug(album.slug);
     setFeaturedAlbumFile(null);
     setFeaturedAlbumGalleryItems(createEditableGalleryItems(albumStoryGalleries[album.slug] || []));
+    setShowFeaturedAlbumGalleryEditor(false);
     setFeaturedAlbumProgress(0);
     setFeaturedAlbumProgressLabel('');
     setMessage('');
@@ -1184,8 +1314,13 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
     }
   }
 
-  async function handleSaveFeaturedAlbum(event) {
-    event.preventDefault();
+  async function saveFeaturedAlbum(options = {}) {
+    const {
+      includeGalleryChanges = true,
+      requireGallery = true,
+      keepEditorOpen = false,
+      successMessage,
+    } = options;
 
     if (!session?.access_token) {
       setError('Please login first.');
@@ -1205,7 +1340,8 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
       }
 
       const pendingUploadCount =
-        (featuredAlbumFile ? 1 : 0) + featuredAlbumGalleryItems.filter((item) => item.file instanceof File).length;
+        (featuredAlbumFile ? 1 : 0) +
+        (includeGalleryChanges ? featuredAlbumGalleryItems.filter((item) => item.file instanceof File).length : 0);
       let completedUploads = 0;
 
       const updateUploadProgress = (label, percent = 0) => {
@@ -1249,46 +1385,48 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
 
       const nextGalleryItems = [];
 
-      for (let index = 0; index < featuredAlbumGalleryItems.length; index += 1) {
-        const item = featuredAlbumGalleryItems[index];
-        const caption = item.caption.trim();
-        const hasInput = Boolean(item.imageUrl.trim() || caption || item.file instanceof File);
+      if (includeGalleryChanges) {
+        for (let index = 0; index < featuredAlbumGalleryItems.length; index += 1) {
+          const item = featuredAlbumGalleryItems[index];
+          const caption = item.caption.trim();
+          const hasInput = Boolean(item.imageUrl.trim() || caption || item.file instanceof File);
 
-        if (!hasInput) {
-          continue;
-        }
+          if (!hasInput) {
+            continue;
+          }
 
-        let galleryImageUrl = normalizeSupabaseStorageUrl(item.imageUrl.trim());
+          let galleryImageUrl = normalizeSupabaseStorageUrl(item.imageUrl.trim());
 
-        if (item.file instanceof File) {
-          const uploadLabelNumber = completedUploads + 1;
-          const upload = await uploadStorageImage(item.file, session.access_token, 'featured-albums-gallery', {
-            onProgress: (percent) => {
-              updateUploadProgress(
-                `Uploading gallery image ${uploadLabelNumber} of ${pendingUploadCount}... ${percent}%`,
-                percent
-              );
-            },
+          if (item.file instanceof File) {
+            const uploadLabelNumber = completedUploads + 1;
+            const upload = await uploadStorageImage(item.file, session.access_token, 'featured-albums-gallery', {
+              onProgress: (percent) => {
+                updateUploadProgress(
+                  `Uploading gallery image ${uploadLabelNumber} of ${pendingUploadCount}... ${percent}%`,
+                  percent
+                );
+              },
+            });
+            galleryImageUrl = getUploadedStorageUrl(upload);
+            completedUploads += 1;
+          }
+
+          if (!galleryImageUrl) {
+            throw new Error(`Gallery image ${index + 1} needs an image URL or upload.`);
+          }
+
+          if (!caption) {
+            throw new Error(`Gallery image ${index + 1} needs a caption.`);
+          }
+
+          nextGalleryItems.push({
+            image: galleryImageUrl,
+            caption,
           });
-          galleryImageUrl = getUploadedStorageUrl(upload);
-          completedUploads += 1;
         }
-
-        if (!galleryImageUrl) {
-          throw new Error(`Gallery image ${index + 1} needs an image URL or upload.`);
-        }
-
-        if (!caption) {
-          throw new Error(`Gallery image ${index + 1} needs a caption.`);
-        }
-
-        nextGalleryItems.push({
-          image: galleryImageUrl,
-          caption,
-        });
       }
 
-      if (nextGalleryItems.length === 0) {
+      if (requireGallery && nextGalleryItems.length === 0) {
         throw new Error('Add at least one gallery image with a caption for this featured album.');
       }
 
@@ -1333,12 +1471,17 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
       const nextGalleries = {
         ...albumStoryGalleries,
       };
+      const savedGalleryItems = editingFeaturedAlbumSlug ? albumStoryGalleries[editingFeaturedAlbumSlug] || [] : [];
 
       if (editingFeaturedAlbumSlug && editingFeaturedAlbumSlug !== slug) {
         delete nextGalleries[editingFeaturedAlbumSlug];
       }
 
-      nextGalleries[slug] = nextGalleryItems;
+      nextGalleries[slug] = includeGalleryChanges
+        ? nextGalleryItems
+        : editingFeaturedAlbumSlug
+          ? savedGalleryItems
+          : nextGalleries[slug] || [];
 
       await Promise.all([
         saveFeaturedAlbums(nextAlbums),
@@ -1347,8 +1490,29 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
 
       setFeaturedAlbumProgress(100);
       setFeaturedAlbumProgressLabel('Completed');
-      resetFeaturedAlbumForm(nextAlbums.length, { clearProgress: false });
-      setMessage(editingFeaturedAlbumSlug ? 'Featured album updated successfully.' : 'Featured album created successfully.');
+
+      if (keepEditorOpen) {
+        const savedAlbumIndex = nextAlbums.findIndex((album) => album.slug === slug);
+        setEditingFeaturedAlbumSlug(slug);
+        setFeaturedAlbumFile(null);
+        setFeaturedAlbumForm({
+          title: nextAlbum.title,
+          slug: nextAlbum.slug,
+          heroTitle: nextAlbum.heroTitle,
+          heroSubtitle: nextAlbum.heroSubtitle,
+          pageCaption: nextAlbum.pageCaption,
+          story: nextAlbum.story,
+          credit: nextAlbum.credit,
+          imageUrl: nextAlbum.image,
+          sortOrder: String(savedAlbumIndex >= 0 ? savedAlbumIndex + 1 : nextSortOrder),
+        });
+      } else {
+        resetFeaturedAlbumForm(nextAlbums.length, { clearProgress: false });
+      }
+
+      setMessage(
+        successMessage || (editingFeaturedAlbumSlug ? 'Featured album updated successfully.' : 'Featured album created successfully.')
+      );
     } catch (saveError) {
       setFeaturedAlbumProgress(0);
       setFeaturedAlbumProgressLabel('');
@@ -1356,6 +1520,30 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
     } finally {
       setSavingAlbums(false);
     }
+  }
+
+  async function handleSaveFeaturedAlbum(event) {
+    event.preventDefault();
+
+    await saveFeaturedAlbum({
+      includeGalleryChanges: true,
+      requireGallery: true,
+      keepEditorOpen: false,
+      successMessage: editingFeaturedAlbumSlug
+        ? 'Featured album and gallery updated successfully.'
+        : 'Featured album and gallery created successfully.',
+    });
+  }
+
+  async function handleSaveFeaturedAlbumDetails() {
+    await saveFeaturedAlbum({
+      includeGalleryChanges: false,
+      requireGallery: false,
+      keepEditorOpen: true,
+      successMessage: editingFeaturedAlbumSlug
+        ? 'Featured album details saved. Click Add Gallery Image to update the gallery.'
+        : 'Featured album saved. Click Add Gallery Image to continue.',
+    });
   }
 
   async function handleDeleteFeaturedAlbum(slug) {
@@ -1685,24 +1873,22 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
   }
 
   return (
-    <section className="bg-stone-50 px-6 py-16 md:py-20">
+    <section className="bg-stone-50 px-6 pt-4 pb-10 md:pt-6 md:pb-12">
       <div className="mx-auto max-w-6xl">
         {session && (
-          <div className="flex flex-col gap-4 rounded-[2rem] border border-stone-200 bg-white p-8 shadow-sm md:flex-row md:items-end md:justify-between md:p-10">
+          <div className="flex flex-col gap-5 rounded-[1.75rem] border border-stone-200 bg-white p-6 shadow-sm md:flex-row md:items-start md:justify-between md:p-7">
             <div>
-              <p className="text-sm uppercase tracking-[0.35em] text-stone-500">Website Admin</p>
-              <h1 className="mt-4 text-3xl font-semibold text-stone-950 md:text-5xl">Manage slider and all site sections</h1>
-              <p className="mt-5 max-w-3xl text-base leading-8 text-stone-700">
-                Login with your Supabase user, upload slider images, and update every content section that powers the
-                public site.
-              </p>
+              <p className="text-[11px] uppercase tracking-[0.28em] text-stone-500">Website Admin</p>
+              <h1 className="mt-2.5 text-xl font-semibold leading-tight text-stone-950 md:text-[2.4rem]">
+                Manage slider and all site sections
+              </h1>
             </div>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3 md:self-start">
               <button
                 type="button"
                 onClick={() => navigate('/')}
-                className="rounded-full border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-700 transition hover:border-stone-500 hover:text-stone-950"
+                className="rounded-full border border-stone-300 px-4 py-2.5 text-[11px] font-semibold text-stone-700 transition hover:border-stone-500 hover:text-stone-950"
               >
                 View Home
               </button>
@@ -1710,7 +1896,7 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                 type="button"
                 onClick={handleLogout}
                 disabled={loggingOut}
-                className="inline-flex items-center gap-2 rounded-full bg-stone-900 px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-full bg-stone-900 px-4 py-2.5 text-[11px] font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loggingOut && <Spinner className="size-4 text-white" />}
                 {loggingOut ? 'Logging out...' : 'Logout'}
@@ -1889,33 +2075,33 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
               </aside>
 
               <div>
-                <div className="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm md:p-8">
-                  <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                <div className="rounded-[1.6rem] border border-stone-200 bg-white p-5 shadow-sm md:p-6">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <div>
-                      <p className="text-sm uppercase tracking-[0.35em] text-stone-500">Workspace Overview</p>
-                      <h2 className="mt-3 text-2xl font-semibold text-stone-950">{activeWorkspace.label}</h2>
-                      <p className="mt-2 max-w-3xl text-sm leading-7 text-stone-600">{activeWorkspace.description}</p>
+                      <p className="text-[11px] uppercase tracking-[0.28em] text-stone-500">Workspace Overview</p>
+                      <h2 className="mt-2 text-xl font-semibold text-stone-950">{activeWorkspace.label}</h2>
+                      <p className="mt-1.5 max-w-3xl text-xs leading-6 text-stone-600">{activeWorkspace.description}</p>
                       {activeAdminSection === 'content' && selectedSectionDefinition && (
-                        <p className="mt-3 text-xs font-semibold uppercase tracking-[0.25em] text-stone-500">
+                        <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-500">
                           Editing raw section: {selectedSectionDefinition.label}
                         </p>
                       )}
                     </div>
-                    <div className="rounded-full bg-stone-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-stone-700">
+                    <div className="rounded-full bg-stone-100 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-700">
                       {activeWorkspace.statusLabel}
                     </div>
                   </div>
                 </div>
 
                 <div className={`mt-8 ${activeAdminSection === 'slider' ? 'block' : 'hidden'}`}>
-              <div className="grid gap-8 xl:grid-cols-[0.95fr_1.05fr]">
-              <form onSubmit={handleSaveSlide} className="rounded-[2rem] border border-stone-200 bg-white p-8 shadow-sm">
+              <div className="grid items-start gap-8 xl:grid-cols-[0.95fr_1.05fr]">
+              <form ref={sliderEditorRef} onSubmit={handleSaveSlide} className="self-start rounded-[2rem] border border-stone-200 bg-white px-6 pb-14 pt-6 shadow-sm">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <h2 className="text-2xl font-semibold text-stone-950">
+                    <h2 className="text-[1.7rem] font-semibold text-stone-950">
                       {editingId ? 'Edit slide' : 'Create a new slide'}
                     </h2>
-                    <p className="mt-2 text-sm leading-7 text-stone-600">
+                    <p className="mt-2 text-sm leading-6 text-stone-600">
                       Upload a file to Supabase Storage, or paste a direct image URL.
                     </p>
                   </div>
@@ -1930,39 +2116,39 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                   )}
                 </div>
 
-                <label className="mt-8 block text-sm font-medium text-stone-700">
+                <label className="mt-5 block text-sm font-medium text-stone-700">
                   Slide title
                   <input
                     type="text"
                     value={form.title}
                     onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
-                    className="mt-2 w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm outline-none transition focus:border-stone-500"
+                    className="mt-2 w-full rounded-2xl border border-stone-300 px-4 py-2.5 text-sm outline-none transition focus:border-stone-500"
                     placeholder="Optional title for your own tracking"
                   />
                 </label>
 
-                <label className="mt-5 block text-sm font-medium text-stone-700">
+                <label className="mt-3.5 block text-sm font-medium text-stone-700">
                   Image URL
                   <input
                     type="url"
                     value={form.imageUrl}
                     onChange={(event) => setForm((current) => ({ ...current, imageUrl: event.target.value }))}
-                    className="mt-2 w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm outline-none transition focus:border-stone-500"
+                    className="mt-2 w-full rounded-2xl border border-stone-300 px-4 py-2.5 text-sm outline-none transition focus:border-stone-500"
                     placeholder="Paste image URL"
                   />
                 </label>
 
-                <label className="mt-5 block text-sm font-medium text-stone-700">
+                <label className="mt-3.5 block text-sm font-medium text-stone-700">
                   Or upload image
                   <input
                     type="file"
                     accept="image/*"
                     onChange={(event) => setSelectedFile(event.target.files?.[0] || null)}
-                    className="mt-2 block w-full rounded-2xl border border-dashed border-stone-300 px-4 py-4 text-sm text-stone-600"
+                    className="mt-2 block w-full rounded-2xl border border-dashed border-stone-300 px-4 py-3 text-sm text-stone-600"
                   />
                 </label>
 
-                <div className="mt-5 grid gap-5 sm:grid-cols-2">
+                <div className="mt-3.5 grid gap-3.5 sm:grid-cols-2">
                   <label className="block text-sm font-medium text-stone-700">
                     Sort order
                     <input
@@ -1970,11 +2156,11 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                       min="1"
                       value={form.sortOrder}
                       onChange={(event) => setForm((current) => ({ ...current, sortOrder: event.target.value }))}
-                      className="mt-2 w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm outline-none transition focus:border-stone-500"
+                      className="mt-2 w-full rounded-2xl border border-stone-300 px-4 py-2.5 text-sm outline-none transition focus:border-stone-500"
                     />
                   </label>
 
-                  <label className="flex items-center gap-3 rounded-2xl border border-stone-200 px-4 py-3 text-sm font-medium text-stone-700 sm:mt-7">
+                  <label className="flex items-center gap-3 rounded-2xl border border-stone-200 px-4 py-2 text-sm font-medium text-stone-700 sm:mt-5">
                     <input
                       type="checkbox"
                       checked={form.isActive}
@@ -1998,17 +2184,28 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                 <button
                   type="submit"
                   disabled={saving}
-                  className="mt-8 rounded-full bg-stone-900 px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="mt-5 rounded-full bg-stone-900 px-6 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {saving ? 'Saving...' : editingId ? 'Update Slide' : 'Save Slide'}
                 </button>
               </form>
 
-              <div className="rounded-[2rem] border border-stone-200 bg-white p-8 shadow-sm">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div
+                className="self-start flex flex-col overflow-hidden rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm"
+                style={
+                  sliderItemsCardHeight
+                    ? {
+                        height: sliderItemsCardHeight,
+                        minHeight: sliderItemsCardHeight,
+                        maxHeight: sliderItemsCardHeight,
+                      }
+                    : undefined
+                }
+              >
+                <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <h2 className="text-2xl font-semibold text-stone-950">All slider items</h2>
-                    <p className="mt-2 text-sm leading-7 text-stone-600">
+                    <h2 className="text-xl font-semibold text-stone-950">All slider items</h2>
+                    <p className="mt-1.5 text-sm leading-6 text-stone-600">
                       These records are loaded from the <span className="font-semibold text-stone-900">hero_slides</span>{' '}
                       table.
                     </p>
@@ -2016,97 +2213,100 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                   <button
                     type="button"
                     onClick={() => loadSlides(session.access_token)}
-                    className="rounded-full border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-700 transition hover:border-stone-500 hover:text-stone-950"
+                    className="rounded-full border border-stone-300 px-4 py-2 text-xs font-semibold text-stone-700 transition hover:border-stone-500 hover:text-stone-950"
                   >
                     Refresh
                   </button>
                 </div>
 
-                {loadingSlides ? (
-                  <div className="mt-8 rounded-3xl bg-stone-50 px-5 py-4 text-sm text-stone-600">Loading slides...</div>
-                ) : slides.length === 0 ? (
-                  <div className="mt-8 rounded-3xl bg-stone-50 px-5 py-4 text-sm text-stone-600">
-                    No slides found yet. Create your first one from the form.
-                  </div>
-                ) : (
-                  <div className="mt-8 space-y-5">
-                    {slides.map((slide) => (
-                      <article
-                        key={slide._adminKey}
-                        className="overflow-hidden rounded-[1.5rem] border border-stone-200 bg-stone-50"
-                      >
-                        <div className="grid gap-4 md:grid-cols-[220px_1fr]">
-                          <img
-                            src={normalizeSupabaseStorageUrl(slide.image_url)}
-                            alt={slide.title || 'Hero slide'}
-                            className="h-full min-h-48 w-full object-cover"
-                          />
-                          <div className="p-5">
-                            <div className="flex flex-wrap items-start justify-between gap-4">
-                              <div>
-                                <p className="text-lg font-semibold text-stone-950">{slide.title || 'Untitled slide'}</p>
-                                <p className="mt-2 break-all text-sm text-stone-600">
-                                  {normalizeSupabaseStorageUrl(slide.image_url)}
-                                </p>
-                              </div>
-                              <div className="rounded-full bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-stone-600">
-                                {slide.is_active ? 'Active' : 'Hidden'}
-                              </div>
+                <div
+                  ref={sliderItemsScrollerRef}
+                  className="mt-5 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 snap-y snap-mandatory scroll-smooth"
+                >
+                  {loadingSlides ? (
+                    <div className="rounded-3xl bg-stone-50 px-5 py-4 text-sm text-stone-600">Loading slides...</div>
+                  ) : slides.length === 0 ? (
+                    <div className="rounded-3xl bg-stone-50 px-5 py-4 text-sm text-stone-600">
+                      No slides found yet. Create your first one from the form.
+                    </div>
+                  ) : (
+                    <div className="space-y-5 pb-1">
+                      {slides.map((slide) => (
+                        <article
+                          key={slide._adminKey}
+                          className="snap-start overflow-hidden rounded-[1.5rem] border border-stone-200 bg-stone-50"
+                          style={
+                            sliderItemsViewportHeight
+                              ? { minHeight: Math.max(320, sliderItemsViewportHeight - 16) }
+                              : undefined
+                          }
+                        >
+                          <div className="flex h-full flex-col">
+                            <div className="flex h-44 items-center justify-center bg-white p-2.5 md:h-40">
+                              <img
+                                src={normalizeSupabaseStorageUrl(slide.image_url)}
+                                alt={slide.title || 'Hero slide'}
+                                className="h-full w-full object-contain"
+                              />
                             </div>
+                            <div className="border-t border-stone-200 p-4">
+                              <div className="flex flex-wrap items-start justify-between gap-3">
+                                <div>
+                                  <p className="text-base font-semibold text-stone-950">{slide.title || 'Untitled slide'}</p>
+                                  <p className="mt-1.5 break-all text-xs leading-5 text-stone-600">
+                                    {normalizeSupabaseStorageUrl(slide.image_url)}
+                                  </p>
+                                </div>
+                                <div className="rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-600">
+                                  {slide.is_active ? 'Active' : 'Hidden'}
+                                </div>
+                              </div>
 
-                            <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-stone-600">
-                              <span className="rounded-full bg-white px-4 py-2">Order: {slide.sort_order ?? 1}</span>
-                              <span className="rounded-full bg-white px-4 py-2">
-                                ID: {slide.id || 'Imported row without UUID'}
-                              </span>
-                            </div>
+                              <div className="mt-4 flex flex-wrap items-center gap-2.5 text-xs text-stone-600">
+                                <span className="rounded-full bg-white px-3 py-1.5">Order: {slide.sort_order ?? 1}</span>
+                                <span className="rounded-full bg-white px-3 py-1.5">
+                                  ID: {slide.id || 'Imported row without UUID'}
+                                </span>
+                              </div>
 
-                            <div className="mt-6 flex flex-wrap gap-3">
-                              <button
-                                type="button"
-                                onClick={() => startEditing(slide)}
-                                className="rounded-full bg-stone-900 px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteSlide(slide)}
-                                className="rounded-full border border-rose-300 px-5 py-3 text-sm font-semibold text-rose-700 transition hover:border-rose-500 hover:text-rose-900"
-                              >
-                                Delete
-                              </button>
+                              <div className="mt-4 flex flex-wrap gap-2.5">
+                                <button
+                                  type="button"
+                                  onClick={() => startEditing(slide)}
+                                  className="rounded-full bg-stone-900 px-4 py-2 text-xs font-semibold text-white transition hover:opacity-90"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteSlide(slide)}
+                                  className="rounded-full border border-rose-300 px-4 py-2 text-xs font-semibold text-rose-700 transition hover:border-rose-500 hover:text-rose-900"
+                                >
+                                  Delete
+                                </button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </article>
-                    ))}
-                  </div>
-                )}
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               </div>
             </div>
 
             <div className={`mt-8 ${activeAdminSection === 'albums' ? 'block' : 'hidden'}`}>
-              <div className="grid gap-8 xl:grid-cols-[0.95fr_1.05fr]">
-              <form onSubmit={handleSaveFeaturedAlbum} className="rounded-[2rem] border border-stone-200 bg-white p-8 shadow-sm">
+              <div className="grid items-start gap-8 xl:grid-cols-[0.95fr_1.05fr]">
+              <form ref={featuredAlbumEditorRef} onSubmit={handleSaveFeaturedAlbum} className="self-start rounded-[2rem] border border-stone-200 bg-white p-8 shadow-sm">
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <h2 className="text-2xl font-semibold text-stone-950">
+                    <h2 className="text-[1.7rem] font-semibold text-stone-950">
                       {editingFeaturedAlbumSlug ? 'Edit featured album' : 'Create featured album'}
                     </h2>
-                    <p className="mt-2 text-sm leading-7 text-stone-600">
+                    <p className="mt-2 text-sm leading-6 text-stone-600">
                       Upload the album cover image, then manage the title, page caption, story, and gallery captions from one place.
                     </p>
-                    <div className="mt-4 rounded-[1.25rem] border border-stone-200 bg-stone-50 px-4 py-3">
-                      <p className="text-xs font-semibold uppercase tracking-[0.25em] text-stone-500">
-                        {editingFeaturedAlbumSlug ? 'Currently editing' : 'Preparing gallery for'}
-                      </p>
-                      <p className="mt-2 text-lg font-semibold text-stone-950">{featuredAlbumTargetName}</p>
-                      <p className="mt-1 text-sm text-stone-600">
-                        {featuredAlbumTargetPath ? `Page: ${featuredAlbumTargetPath}` : 'Add a slug to create the album page path.'}
-                      </p>
-                    </div>
                   </div>
                   {editingFeaturedAlbumSlug && (
                     <button
@@ -2133,9 +2333,6 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                       </option>
                     ))}
                   </select>
-                  <p className="mt-2 text-xs leading-6 text-stone-500">
-                    Select an existing featured album to load its cover, story, and gallery images before uploading new ones.
-                  </p>
                 </label>
 
                 <div className="mt-8 grid gap-5 sm:grid-cols-2">
@@ -2161,9 +2358,6 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                       placeholder="monsoon-wedding-story"
                       required
                     />
-                    <p className="mt-2 text-xs leading-6 text-stone-500">
-                      Album page: {featuredAlbumForm.slug.trim() ? `/sample-works/${featuredAlbumForm.slug.trim()}` : '/sample-works/your-slug'}
-                    </p>
                   </label>
                 </div>
 
@@ -2269,110 +2463,136 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                   </div>
                 )}
 
-                <div className="mt-8 rounded-[1.5rem] border border-stone-200 bg-stone-50 p-5">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-stone-950">Album gallery for {featuredAlbumTargetName}</h3>
-                      <p className="mt-2 text-sm leading-7 text-stone-600">
-                        These images and captions will show on the featured album detail page in the same order.
-                      </p>
-                      <p className="mt-2 text-sm font-medium text-stone-700">
-                        {featuredAlbumTargetPath ? `Target page: ${featuredAlbumTargetPath}` : 'Target page will appear after you set the slug.'}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={addFeaturedAlbumGalleryItem}
-                      className="rounded-full border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-700 transition hover:border-stone-500 hover:text-stone-950"
-                    >
-                      Add gallery image
-                    </button>
-                  </div>
-
-                  <div className="mt-6 space-y-4">
-                    {featuredAlbumGalleryItems.map((item, index) => (
-                      <div key={item.id} className="rounded-[1.5rem] border border-stone-200 bg-white p-5">
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-stone-500">
-                            Gallery Image {index + 1}
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            <button
-                              type="button"
-                              onClick={() => moveFeaturedAlbumGalleryItem(index, -1)}
-                              disabled={index === 0}
-                              className="rounded-full border border-stone-300 px-3 py-1.5 text-xs font-semibold text-stone-700 transition hover:border-stone-500 hover:text-stone-950 disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                              Move up
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => moveFeaturedAlbumGalleryItem(index, 1)}
-                              disabled={index === featuredAlbumGalleryItems.length - 1}
-                              className="rounded-full border border-stone-300 px-3 py-1.5 text-xs font-semibold text-stone-700 transition hover:border-stone-500 hover:text-stone-950 disabled:cursor-not-allowed disabled:opacity-40"
-                            >
-                              Move down
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => removeFeaturedAlbumGalleryItem(item.id)}
-                              className="rounded-full border border-rose-300 px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:border-rose-500 hover:text-rose-900"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        </div>
-
-                        <label className="mt-5 block text-sm font-medium text-stone-700">
-                          Caption
-                          <textarea
-                            value={item.caption}
-                            onChange={(event) => updateFeaturedAlbumGalleryItem(item.id, { caption: event.target.value })}
-                            className="mt-2 min-h-24 w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm outline-none transition focus:border-stone-500"
-                            placeholder="Write the caption that will appear under this photo..."
-                          />
-                        </label>
-
-                        <label className="mt-5 block text-sm font-medium text-stone-700">
-                          Image URL
-                          <input
-                            type="url"
-                            value={item.imageUrl}
-                            onChange={(event) => updateFeaturedAlbumGalleryItem(item.id, { imageUrl: event.target.value })}
-                            className="mt-2 w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm outline-none transition focus:border-stone-500"
-                            placeholder="Paste image URL"
-                          />
-                        </label>
-
-                        <label className="mt-5 block text-sm font-medium text-stone-700">
-                          Or upload image
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(event) => updateFeaturedAlbumGalleryItem(item.id, { file: event.target.files?.[0] || null })}
-                            className="mt-2 block w-full rounded-2xl border border-dashed border-stone-300 px-4 py-4 text-sm text-stone-600"
-                          />
-                        </label>
-
-                        {item.file && (
-                          <div className="mt-4 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-600">
-                            Selected file: <span className="font-medium text-stone-900">{item.file.name}</span>
-                          </div>
-                        )}
-
-                        {item.imageUrl && (
-                          <div className="mt-4 overflow-hidden rounded-[1.25rem] border border-stone-200 bg-stone-50">
-                            <img
-                              src={normalizeSupabaseStorageUrl(item.imageUrl)}
-                              alt={item.caption || `Gallery image ${index + 1}`}
-                              className="h-52 w-full object-cover"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={handleSaveFeaturedAlbumDetails}
+                    disabled={savingAlbums}
+                    className="rounded-full bg-stone-900 px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {savingAlbums
+                      ? 'Saving album...'
+                      : editingFeaturedAlbumSlug
+                        ? 'Save Album Details'
+                        : 'Save Featured Album'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowFeaturedAlbumGalleryEditor((current) => !current)}
+                    className="rounded-full border border-stone-300 px-6 py-3 text-sm font-semibold text-stone-700 transition hover:border-stone-500 hover:text-stone-950"
+                  >
+                    {showFeaturedAlbumGalleryEditor ? 'Hide Gallery Image' : 'Add Gallery Image'}
+                  </button>
                 </div>
+
+                {showFeaturedAlbumGalleryEditor && (
+                  <>
+                    <div className="mt-8 rounded-[1.5rem] border border-stone-200 bg-stone-50 p-5">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <h3 className="text-lg font-semibold text-stone-950">Album gallery for {featuredAlbumTargetName}</h3>
+                          <p className="mt-2 text-sm leading-7 text-stone-600">
+                            These images and captions will show on the featured album detail page in the same order.
+                          </p>
+                          <p className="mt-2 text-sm font-medium text-stone-700">
+                            {featuredAlbumTargetPath ? `Target page: ${featuredAlbumTargetPath}` : 'Target page will appear after you set the slug.'}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={addFeaturedAlbumGalleryItem}
+                          className="rounded-full border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-700 transition hover:border-stone-500 hover:text-stone-950"
+                        >
+                          Add gallery image
+                        </button>
+                      </div>
+
+                      <div className="mt-6 space-y-4">
+                        {featuredAlbumGalleryItems.map((item, index) => (
+                          <div key={item.id} className="rounded-[1.5rem] border border-stone-200 bg-white p-5">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                              <p className="text-sm font-semibold uppercase tracking-[0.25em] text-stone-500">
+                                Gallery Image {index + 1}
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => moveFeaturedAlbumGalleryItem(index, -1)}
+                                  disabled={index === 0}
+                                  className="rounded-full border border-stone-300 px-3 py-1.5 text-xs font-semibold text-stone-700 transition hover:border-stone-500 hover:text-stone-950 disabled:cursor-not-allowed disabled:opacity-40"
+                                >
+                                  Move up
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => moveFeaturedAlbumGalleryItem(index, 1)}
+                                  disabled={index === featuredAlbumGalleryItems.length - 1}
+                                  className="rounded-full border border-stone-300 px-3 py-1.5 text-xs font-semibold text-stone-700 transition hover:border-stone-500 hover:text-stone-950 disabled:cursor-not-allowed disabled:opacity-40"
+                                >
+                                  Move down
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => removeFeaturedAlbumGalleryItem(item.id)}
+                                  className="rounded-full border border-rose-300 px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:border-rose-500 hover:text-rose-900"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+                            </div>
+
+                            <label className="mt-5 block text-sm font-medium text-stone-700">
+                              Caption
+                              <textarea
+                                value={item.caption}
+                                onChange={(event) => updateFeaturedAlbumGalleryItem(item.id, { caption: event.target.value })}
+                                className="mt-2 min-h-24 w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm outline-none transition focus:border-stone-500"
+                                placeholder="Write the caption that will appear under this photo..."
+                              />
+                            </label>
+
+                            <label className="mt-5 block text-sm font-medium text-stone-700">
+                              Image URL
+                              <input
+                                type="url"
+                                value={item.imageUrl}
+                                onChange={(event) => updateFeaturedAlbumGalleryItem(item.id, { imageUrl: event.target.value })}
+                                className="mt-2 w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm outline-none transition focus:border-stone-500"
+                                placeholder="Paste image URL"
+                              />
+                            </label>
+
+                            <label className="mt-5 block text-sm font-medium text-stone-700">
+                              Or upload image
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(event) => updateFeaturedAlbumGalleryItem(item.id, { file: event.target.files?.[0] || null })}
+                                className="mt-2 block w-full rounded-2xl border border-dashed border-stone-300 px-4 py-4 text-sm text-stone-600"
+                              />
+                            </label>
+
+                            {item.file && (
+                              <div className="mt-4 rounded-2xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-600">
+                                Selected file: <span className="font-medium text-stone-900">{item.file.name}</span>
+                              </div>
+                            )}
+
+                            {item.imageUrl && (
+                              <div className="mt-4 overflow-hidden rounded-[1.25rem] border border-stone-200 bg-stone-50">
+                                <img
+                                  src={normalizeSupabaseStorageUrl(item.imageUrl)}
+                                  alt={item.caption || `Gallery image ${index + 1}`}
+                                  className="h-52 w-full object-cover"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 {(savingAlbums || featuredAlbumProgress > 0) && (
                   <div className="mt-6 rounded-[1.5rem] border border-stone-200 bg-stone-50 p-4">
@@ -2391,24 +2611,36 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                   </div>
                 )}
 
-                <button
-                  type="submit"
-                  disabled={savingAlbums}
-                  className="mt-8 rounded-full bg-stone-900 px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {savingAlbums ? 'Saving album...' : editingFeaturedAlbumSlug ? 'Update Album' : 'Save Album'}
-                </button>
+                {showFeaturedAlbumGalleryEditor && (
+                  <button
+                    type="submit"
+                    disabled={savingAlbums}
+                    className="mt-8 rounded-full bg-stone-900 px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {savingAlbums
+                      ? 'Saving album...'
+                      : editingFeaturedAlbumSlug
+                        ? 'Update Album & Gallery'
+                        : 'Save Album & Gallery'}
+                  </button>
+                )}
               </form>
 
-              <div className="rounded-[2rem] border border-stone-200 bg-white p-8 shadow-sm">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div
+                className="self-start flex flex-col overflow-hidden rounded-[2rem] border border-stone-200 bg-white p-8 shadow-sm"
+                style={
+                  featuredAlbumsCardHeight
+                    ? {
+                        height: featuredAlbumsCardHeight,
+                        minHeight: featuredAlbumsCardHeight,
+                        maxHeight: featuredAlbumsCardHeight,
+                      }
+                    : undefined
+                }
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <h2 className="text-2xl font-semibold text-stone-950">Featured albums</h2>
-                    <p className="mt-2 text-sm leading-7 text-stone-600">
-                      These records are saved into the <span className="font-semibold text-stone-900">featuredAlbums</span>{' '}
-                      content section, and their detail page galleries are saved into{' '}
-                      <span className="font-semibold text-stone-900">albumStoryGalleries</span>.
-                    </p>
+                    <h2 className="text-[1.7rem] font-semibold text-stone-950">Featured albums</h2>
                   </div>
                   <button
                     type="button"
@@ -2419,59 +2651,67 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                   </button>
                 </div>
 
-                {loadingSections ? (
-                  <div className="mt-8 rounded-3xl bg-stone-50 px-5 py-4 text-sm text-stone-600">
-                    Loading featured albums...
-                  </div>
-                ) : featuredAlbums.length === 0 ? (
-                  <div className="mt-8 rounded-3xl bg-stone-50 px-5 py-4 text-sm text-stone-600">
-                    No featured albums found yet. Create your first one from the form.
-                  </div>
-                ) : (
-                  <div className="mt-8 space-y-5">
-                    {featuredAlbums.map((album, index) => {
-                      const galleryItems = albumStoryGalleries[album.slug] || [];
-                      const isEditingAlbum = editingFeaturedAlbumSlug === album.slug;
+                <div ref={featuredAlbumsScrollerRef} className="mt-8 min-h-0 flex-1 overflow-y-auto overscroll-contain pr-2">
+                  {loadingSections ? (
+                    <div className="rounded-3xl bg-stone-50 px-5 py-4 text-sm text-stone-600">
+                      Loading featured albums...
+                    </div>
+                  ) : featuredAlbums.length === 0 ? (
+                    <div className="rounded-3xl bg-stone-50 px-5 py-4 text-sm text-stone-600">
+                      No featured albums found yet. Create your first one from the form.
+                    </div>
+                  ) : (
+                    <div className="space-y-5 pb-1">
+                      {featuredAlbums.map((album, index) => {
+                        const galleryItems = albumStoryGalleries[album.slug] || [];
+                        const isEditingAlbum = editingFeaturedAlbumSlug === album.slug;
+                        const albumImage = normalizeSupabaseStorageUrl(album.image);
 
-                      return (
-                        <article
-                          key={album.slug || `${album.title}-${index}`}
-                          className={`overflow-hidden rounded-[1.5rem] border bg-stone-50 ${
-                            isEditingAlbum ? 'border-stone-900 shadow-[0_0_0_1px_rgba(28,25,23,0.12)]' : 'border-stone-200'
-                          }`}
-                        >
-                          <div className="grid gap-4 md:grid-cols-[220px_1fr]">
-                            <img
-                              src={album.image}
-                              alt={album.title || 'Featured album'}
-                              className="h-full min-h-48 w-full object-cover"
-                            />
-                            <div className="p-5">
-                              <div className="flex flex-wrap items-start justify-between gap-4">
-                                <div>
-                                  <p className="text-lg font-semibold text-stone-950">{album.title || 'Untitled album'}</p>
-                                  <p className="mt-2 text-sm text-stone-600">Slug: {album.slug || 'missing-slug'}</p>
-                                  <p className="mt-2 text-sm text-stone-600">Gallery images: {galleryItems.length}</p>
-                                  {isEditingAlbum && (
-                                    <p className="mt-2 text-xs font-semibold uppercase tracking-[0.25em] text-stone-900">
-                                      Now open in editor
-                                    </p>
-                                  )}
+                        return (
+                          <article
+                            key={album.slug || `${album.title}-${index}`}
+                            className={`overflow-hidden rounded-[1.5rem] border bg-stone-50 ${
+                              isEditingAlbum ? 'border-stone-900 shadow-[0_0_0_1px_rgba(28,25,23,0.12)]' : 'border-stone-200'
+                            }`}
+                          >
+                            <div className="overflow-hidden border-b border-stone-200 bg-white/70">
+                              <img
+                                src={albumImage}
+                                alt={album.title || 'Featured album'}
+                                className="h-44 w-full object-cover"
+                              />
+                            </div>
+                            <div className="p-4">
+                              <div className="flex flex-wrap items-start justify-between gap-3">
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-base font-semibold text-stone-950">{album.title || 'Untitled album'}</p>
                                 </div>
-                                <div className="rounded-full bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.25em] text-stone-600">
+                                <div className="rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-600">
                                   Order {index + 1}
                                 </div>
                               </div>
 
+                              <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-stone-600">
+                                <span className="rounded-full bg-white px-3 py-1.5">Gallery: {galleryItems.length}</span>
+                                {album.credit && <span className="rounded-full bg-white px-3 py-1.5">Credit: {album.credit}</span>}
+                                {isEditingAlbum && (
+                                  <span className="rounded-full bg-stone-900 px-3 py-1.5 font-semibold uppercase tracking-[0.18em] text-white">
+                                    Open in editor
+                                  </span>
+                                )}
+                              </div>
+
                               {album.pageCaption && (
-                                <p className="mt-4 line-clamp-3 rounded-[1.25rem] border border-stone-200 bg-white px-4 py-3 text-sm italic leading-7 text-stone-700">
+                                <p className="mt-3 line-clamp-2 rounded-[1.1rem] border border-stone-200 bg-white px-3.5 py-2.5 text-sm italic leading-6 text-stone-700">
                                   {album.pageCaption}
                                 </p>
                               )}
 
-                              <p className="mt-4 line-clamp-3 text-sm leading-7 text-stone-700">{album.story}</p>
+                              <p className="mt-3 line-clamp-2 text-sm leading-6 text-stone-700">
+                                {album.story || 'No story added yet for this album.'}
+                              </p>
 
-                              <div className="mt-6 rounded-[1.25rem] border border-stone-200 bg-white p-4">
+                              <div className="mt-4 rounded-[1.1rem] border border-stone-200 bg-white p-3.5">
                                 <div className="flex flex-wrap items-center justify-between gap-3">
                                   <p className="text-sm font-semibold text-stone-950">Current gallery preview</p>
                                   <button
@@ -2484,56 +2724,58 @@ export default function HeroSliderAdmin({ navigate, defaultContent = {}, content
                                 </div>
 
                                 {galleryItems.length > 0 ? (
-                                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                                    {galleryItems.map((item, galleryIndex) => (
-                                      <figure
-                                        key={`${album.slug}-${galleryIndex}`}
-                                        className="overflow-hidden rounded-[1rem] border border-stone-200 bg-stone-50"
-                                      >
-                                        <img
-                                          src={item.image}
-                                          alt={item.caption || `${album.title} gallery image ${galleryIndex + 1}`}
-                                          className="h-32 w-full object-cover"
-                                        />
-                                        <figcaption className="p-3 text-xs leading-6 text-stone-700">
-                                          <p className="font-semibold uppercase tracking-[0.2em] text-stone-500">
-                                            Image {galleryIndex + 1}
-                                          </p>
-                                          <p className="mt-2 line-clamp-3">{item.caption || 'No caption added yet.'}</p>
-                                        </figcaption>
-                                      </figure>
-                                    ))}
+                                  <div className="mt-3 overflow-x-auto pb-2">
+                                    <div className="flex min-w-max gap-2.5">
+                                      {galleryItems.map((item, galleryIndex) => (
+                                        <figure
+                                          key={`${album.slug}-${galleryIndex}`}
+                                          className="w-32 shrink-0 overflow-hidden rounded-[1rem] border border-stone-200 bg-stone-50"
+                                        >
+                                          <img
+                                            src={normalizeSupabaseStorageUrl(item.image)}
+                                            alt={item.caption || `${album.title} gallery image ${galleryIndex + 1}`}
+                                            className="h-24 w-full object-cover"
+                                          />
+                                          <figcaption className="p-2.5 text-xs leading-5 text-stone-700">
+                                            <p className="font-semibold uppercase tracking-[0.2em] text-stone-500">
+                                              Image {galleryIndex + 1}
+                                            </p>
+                                            <p className="mt-1.5 line-clamp-2">{item.caption || 'No caption added yet.'}</p>
+                                          </figcaption>
+                                        </figure>
+                                      ))}
+                                    </div>
                                   </div>
                                 ) : (
-                                  <div className="mt-4 rounded-[1rem] border border-dashed border-stone-300 bg-stone-50 px-4 py-4 text-sm text-stone-600">
+                                  <div className="mt-3 rounded-[1rem] border border-dashed border-stone-300 bg-stone-50 px-4 py-3 text-sm text-stone-600">
                                     No gallery images have been saved for this album yet.
                                   </div>
                                 )}
                               </div>
 
-                              <div className="mt-6 flex flex-wrap gap-3">
+                              <div className="mt-4 flex flex-wrap gap-2.5">
                                 <button
                                   type="button"
                                   onClick={() => startEditingFeaturedAlbum(album, index)}
-                                  className="rounded-full bg-stone-900 px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+                                  className="rounded-full bg-stone-900 px-4 py-2.5 text-xs font-semibold text-white transition hover:opacity-90"
                                 >
                                   Edit Album & Gallery
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => handleDeleteFeaturedAlbum(album.slug)}
-                                  className="rounded-full border border-rose-300 px-5 py-3 text-sm font-semibold text-rose-700 transition hover:border-rose-500 hover:text-rose-900"
+                                  className="rounded-full border border-rose-300 px-4 py-2.5 text-xs font-semibold text-rose-700 transition hover:border-rose-500 hover:text-rose-900"
                                 >
                                   Delete
                                 </button>
                               </div>
                             </div>
-                          </div>
-                        </article>
-                      );
-                    })}
-                  </div>
-                )}
+                          </article>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
               </div>
             </div>
